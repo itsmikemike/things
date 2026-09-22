@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<!-- saved from url=(0073)https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gong's Button Lab</title>
+  <style>
+    :root {
+
+      --bg: #0b1020;
+      --panel: #121833;
+      --muted: #8ea0c7;
+      --text: #e9eefc;
+      --chip: #0e1430;
+      --chip-border: rgba(255,255,255,0.07);
+      --btn: #1f2a55;
+      --btn-border: rgba(255,255,255,0.08);
+      --btn-text: #dfe7ff;
+      --btn-active: #2ba84a;
+      --btn-active-border: #258d3f;
+      --tab-green: #2ba84a;
+      --badge-bg: rgba(0,0,0,0.35);
+      --badge-text: #ffffff;
+      --badge-green: #0e6f2a;
+      --tab-bg: #1b2350;
+      --tab-bg-active: #253172;
+      --tab-border: rgba(255,255,255,0.14);
+      --tab-border-active: rgba(255,255,255,0.24);
+      --panel-border: rgba(255,255,255,0.10);
+      --tooltip-bg: #0b1026;
+      --tooltip-border: rgba(255,255,255,0.12);
+    
+  --tab-bg-inactive-dark:#151e46;
+  --tab-bg-inactive-light:#f2f4fb;
+  --tab-text-inactive-light:#4a5a86;
+}
+
+    
+    /* Hide inline slider values next to titles */
+    label span[id$='Val']{display:none !important;}
+* { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1020, #0e1530 50%, #0b1020);
+      color: var(--text);
+    }
+
+    .app { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+
+    aside {
+      background: rgba(18, 24, 51, 0.9);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 18px 24px;
+      position: sticky; top: 0; align-self: start;
+    }
+
+    
+    main {
+      padding: 24px;
+      padding-top: 90px;
+    }
+    
+
+    h1 { font-weight: 800; font-size: 22px; margin: 0 0 6px; letter-spacing: .2px; }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.3; margin-bottom: 18px; }
+
+    
+    .tabs-wrap {
+      position: fixed;
+      top: 12px;
+      left: 344px; /* roughly sidebar (320px) + 24px main padding */
+      z-index: 9998;
+      background: transparent;
+      display: flex;
+      gap: 8px;
+    }
+    
+    .tabs-seam { height: 14px; border-bottom: 1px solid var(--panel-border); margin-bottom: 10px; }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; padding-left: 2px; }
+
+    
+    .tab {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px;
+      appearance: none;
+      border: 1px solid var(--tab-border);
+      background: var(--tab-bg);
+      color: #dfe7ff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1.1;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+      min-width: 220px;
+      height: 44px;
+      white-space: nowrap;
+    }
+    
+    .tab:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .tab[aria-selected="true"] { background: var(--tab-bg-active); border-color: var(--tab-border-active); z-index: 2; box-shadow: 0 10px 22px rgba(0,0,0,0.35); }
+    .tab.alert { background: var(--tab-green); border-color: #1f7d38; color: #eaffef; }
+    .tab.alert[aria-selected="true"] { background: var(--tab-green); border-color: #1f7d38; }
+
+    .tab .icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; font-size: 20px; line-height: 1; vertical-align: middle; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 8px; font-size: 12px; font-weight: 900; border-radius: 999px; margin-left: 8px; background: var(--badge-bg); color: var(--badge-text); line-height: 1; }
+    .tab.alert .badge { background: var(--badge-green); }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+
+    input[type="number"], input[type="text"], input[type="color"] { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: #0e1430; color: var(--text); font-size: 14px; }
+    input[type="range"] { width: 100%; }
+
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .swatches { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; margin-top: 8px; }
+    .swatch-btn { width: 100%; aspect-ratio: 1/1; border-radius: 4px; cursor: pointer; position: relative; overflow: hidden; border: none; }
+    .swatch-btn[aria-pressed="true"]::after { content: "✓"; position: absolute; right: 4px; bottom: 0px; font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+    .swatch-btn:focus-visible { outline: 2px solid #8ea0c7; outline-offset: 2px; }
+
+    .buttons-grid { display: grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap: 16px; }
+    @media (min-width: 1200px) { .buttons-grid { grid-template-columns: repeat(4, minmax(260px, 1fr)); } }
+
+    .card { background: rgba(18, 24, 51, 0.75); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; min-height: 220px; }
+    .preview-wrap { display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(45deg, #0f1636, #0f1636 12px, #10183b 12px, #10183b 24px); border-radius: 12px; padding: 18px; min-height: 104px; margin-bottom: 10px; border: 1px dashed rgba(255,255,255,0.08); }
+    .meta { font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .meta .kv { background: var(--chip); padding: 6px 8px; border-radius: 8px; border: 1px solid var(--chip-border); }
+
+    .actions { display: flex; gap: 8px; margin-top: auto; align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+    .left-actions { display: inline-flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+    .right-actions { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: 6px; }
+
+    .btn { appearance: none; border: 1px solid var(--btn-border); background: var(--btn); color: var(--btn-text); padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    .btn:hover { filter: brightness(1.1); }
+    .btn-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 10px; width: 36px; height: 36px; justify-content: center; font-size: 16px; }
+    .btn-toggle.active { background: var(--btn-active); border-color: var(--btn-active-border); color: #eaffef; }
+
+    footer { color: var(--muted); font-size: 12px; margin-top: 18px; }
+    code { background: #0e1430; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); }
+
+    dialog { border: 0; border-radius: 16px; background: #0e1430; color: #e9eefc; width: min(920px, 92vw); padding: 0; }
+    dialog::backdrop { background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-body { padding: 12px 16px 16px; }
+    pre { background: #0b1026; color: #e9eefc; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+    .close { background: transparent; color: #e9eefc; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+
+    .email-wrap { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; position: relative; }
+    .email-canvas { background: #ffffff; color: #222; max-width: 640px; width: 640px; margin: 0 auto; border-radius: 12px; overflow: hidden; font-family: Helvetica, Arial, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.2); transition: width .15s ease, max-width .15s ease; }
+    .email-canvas.mobile { max-width: 320px; width: 320px; }
+    .email-controls { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: 0 0 10px; flex-wrap: wrap; }
+    .email-controls .ctrl-right { display: inline-flex; gap: 12px; align-items: center; }
+    .email-controls label { font-size: 12px; color: #cbd4ff; display: inline-flex; gap: 6px; align-items: center; }
+
+    .email-hero { width: 100%; display: block; background: url('https://i.imgur.com/XchV1xA.jpeg') center/cover no-repeat; height: 200px; position: relative; }
+    .email-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.05)); }
+    .email-body { padding: 24px; line-height: 1.5; }
+    .email-body h2 { margin: 0 0 10px; font-size: 20px; color: #111; }
+    .email-flow { display: grid; gap: 12px; }
+    .email-flow .btn-slot { display: flex; align-items: flex-start; }
+    .email-flow.center .btn-slot { justify-content: center; align-items: center; }
+    .email-footer { padding: 14px 24px 24px; font-size: 12px; color: #666; }
+
+    .empty-hint { font-size: 12px; color: #777; }
+    .hidden { display: none !important; }
+
+    .tooltip { position: fixed; z-index: 1000; background: var(--tooltip-bg); color: #dfe7ff; border: 1px solid var(--tooltip-border); border-radius: 8px; padding: 8px 10px; font-size: 24px; box-shadow: 0 6px 24px rgba(0,0,0,.35); pointer-events: none; white-space: nowrap; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0; }
+  
+    /* Theme toggle button (fixed, upper-right) */
+    .theme-toggle {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 9999;
+      background: var(--btn);
+      color: var(--btn-text);
+      border: 1px solid var(--btn-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+    .theme-toggle:hover { filter: brightness(1.08); }
+
+    /* Light theme overrides */
+    body.theme-light {
+      background: linear-gradient(180deg, #f5f7fc, #fbfcff 50%, #f5f7fc);
+      color: #0b1020;
+    }
+    body.theme-light aside {
+      background: rgba(255, 255, 255, 0.9);
+      border-right: 1px solid rgba(0,0,0,0.08);
+    }
+    body.theme-light .sub { color: #5a6685; }
+    body.theme-light .tabs-seam { border-bottom-color: rgba(0,0,0,0.08); }
+    body.theme-light 
+    .tab {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px;
+      appearance: none;
+      border: 1px solid var(--tab-border);
+      background: var(--tab-bg);
+      color: #0b1020;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1.1;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+      min-width: 220px;
+      height: 44px;
+      white-space: nowrap;
+    }
+    
+    body.theme-light .tab[aria-selected="true"] {
+      background: #ffffff;
+      border-color: rgba(0,0,0,0.12);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+     color:#0b1020;}
+    body.theme-light .tab.alert { background: var(--btn-active); color: #ffffff; border-color: #1f7d38; }
+    body.theme-light .badge { background: rgba(0,0,0,0.12); color: #0b1020; }
+    body.theme-light .tab.alert .badge { background: #0e6f2a; color: #ffffff; }
+
+    body.theme-light input[type="number"], body.theme-light input[type="text"], body.theme-light input[type="color"] {
+      background: #f5f7ff;
+      color: #0b1020;
+      border-color: rgba(0,0,0,0.08);
+    }
+    body.theme-light .card {
+      background: rgba(255,255,255,0.9);
+      border-color: rgba(0,0,0,0.08);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+    body.theme-light .preview-wrap {
+      background: repeating-linear-gradient(45deg, #f0f2fb, #f0f2fb 12px, #e8ecfb 12px, #e8ecfb 24px);
+      border-color: rgba(0,0,0,0.08);
+    }
+    body.theme-light .meta .kv {
+      background: #f5f7ff;
+      border-color: rgba(0,0,0,0.08);
+      color: #20305a;
+    }
+    body.theme-light .btn {
+      background: #e9ecf8;
+      color: #20305a;
+      border-color: rgba(0,0,0,0.08);
+    }
+    body.theme-light .btn-toggle.active {
+      background: var(--btn-active);
+      color: #ffffff;
+      border-color: var(--btn-active-border);
+    }
+    body.theme-light .email-wrap {
+      background: rgba(0,0,0,0.04);
+      border-color: rgba(0,0,0,0.08);
+    }
+    \1
+
+    body.theme-light dialog { background: #ffffff; color: #0b1020; }
+    body.theme-light .modal-head { border-bottom: 1px solid rgba(0,0,0,0.12); }
+    body.theme-light pre { background: #0b1026; color: #e9eefc; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+    body.theme-light pre code, body.theme-light code { color: #0b1020; }
+
+    body.theme-light pre { background: #0b1026; color: #e9eefc; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+    body.theme-light .close {
+      color: #0b1020;
+      border-color: rgba(0,0,0,0.12);
+      background: #f5f7ff;
+    }
+    body.theme-light .tooltip {
+      background: #ffffff;
+      color: #0b1020;
+      border-color: rgba(0,0,0,0.12);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    body.theme-light dialog, body.theme-light .modal-body { background: #ffffff; color: #0b1020; }
+    body.theme-light pre { background: #ffffff; color: #0b1020; border: 1px solid rgba(0,0,0,0.12); }
+    body.theme-light pre code { background: transparent; color: inherit; }
+    body.theme-light code { background: #f5f7ff; color: #0b1020; border: 1px solid rgba(0,0,0,0.12); }
+
+
+    /* Contrast score chip styles */
+    .meta .kv.kv-contrast.ok { background: rgba(33, 134, 58, 0.18); border-color: rgba(33, 134, 58, 0.5); color: #8ff0a7; }
+    .meta .kv.kv-contrast.bad { background: rgba(183, 46, 46, 0.18); border-color: rgba(183, 46, 46, 0.55); color: #ffb3b3; }
+    body.theme-light .meta .kv.kv-contrast.ok { background: rgba(33,134,58,0.1); border-color: rgba(33,134,58,0.35); color: #1f5a2f; }
+    body.theme-light .meta .kv.kv-contrast.bad { background: rgba(183,46,46,0.1); border-color: rgba(183,46,46,0.35); color: #7a1e1e; }
+
+
+    @media (max-width: 900px) {
+      .tabs-wrap { left: 12px; top: 60px; flex-direction: column; }
+      .tab { min-width: 180px; width: 180px; height: 40px; }
+      main { padding-top: 90px; }
+    }
+
+
+    body.theme-light .email-controls label {
+      color: #0b1020;
+      font-weight: 700;
+    }
+
+
+/* Inactive tab styling */
+.tab[aria-selected="false"] {
+  background: var(--tab-bg-inactive-dark);
+}
+
+/* Hover for inactive tabs (dark mode) */
+.tab[aria-selected="false"]:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* Light mode inactive tab gets a lighter background and softer text */
+body.theme-light .tab[aria-selected="false"] {
+  background: var(--tab-bg-inactive-light);
+  color: var(--tab-text-inactive-light);
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+}
+
+/* Light mode hover for inactive tab */
+body.theme-light .tab[aria-selected="false"]:hover {
+  background: #e9ecf8;
+  filter: none;
+  transform: translateY(-1px);
+}
+
+
+/* === Force floating tabs to always use dark styling (match theme toggle) === */
+.tabs .tab,
+.tabs .tab[aria-selected="true"],
+.tabs .tab[aria-selected="false"],
+body.theme-light .tabs .tab,
+body.theme-light .tabs .tab[aria-selected="true"],
+body.theme-light .tabs .tab[aria-selected="false"] {
+  background: var(--btn) !important;
+  color: var(--btn-text) !important;
+  border-color: var(--btn-border) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important;
+}
+
+.tabs .tab.alert,
+.tabs .tab.alert[aria-selected="true"],
+.tabs .tab.alert[aria-selected="false"],
+body.theme-light .tabs .tab.alert,
+body.theme-light .tabs .tab.alert[aria-selected="true"],
+body.theme-light .tabs .tab.alert[aria-selected="false"] {
+  background: var(--btn-active) !important;
+  color: #eaffef !important;
+  border-color: var(--btn-active-border) !important;
+}
+
+/* Keep size and no-wrap behavior */
+.tabs .tab {
+  height: 56px !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  min-width: 220px;
+  white-space: nowrap;
+}
+
+
+/* Match Lab/Email tabs corner radius to theme toggle (12px) */
+.tabs .tab,
+.tabs .tab[aria-selected="true"],
+.tabs .tab[aria-selected="false"] {
+  border-radius: 12px !important;
+}
+
+
+/* Icon inside standard buttons (match tab icon sizing) */
+.btn .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 1;
+  vertical-align: middle;
+  margin-right: 8px; /* 6–8px gap before text */
+}
+
+</style>
+<script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
+<body class="theme-light" data-new-gr-c-s-check-loaded="14.1328.0" data-gr-ext-installed="">
+  <button id="themeToggle" class="theme-toggle" aria-pressed="true" title="Toggle light/dark theme">☀️</button>
+
+  <div class="app">
+    <aside>
+      <h1>Gong's Button Lab</h1>
+      <p class="sub">Preview / copy bulletproof email buttons. Use the tabs to see the <strong>Lab</strong> of variants or an <strong>Email Preview</strong> with only the <em>toggled</em> buttons.</p>
+
+      <div class="field">
+        <label><span>Base font size (px)</span> <span id="fontSizeVal">9</span></label>
+        <div class="row">
+          <input id="fontSize" type="range" min="8" max="20" value="9" step="1">
+          <input id="fontSizeNum" type="number" min="8" max="20" step="1" value="9">
+        </div>
+      </div>
+
+      <div class="controls-grid">
+        <div class="field" style="grid-column: span 2;">
+          <label><span>Base vertical padding (top &amp; bottom)</span> <span id="pvVal">5</span></label>
+          <div class="row">
+            <input id="padVert" type="range" min="0" max="24" step="1" value="8">
+            <input id="padVertNum" type="number" min="0" max="48" step="1" value="8">
+          </div>
+        </div>
+        <div class="field">
+          <label><span>Base side padding</span> <span id="psVal">12</span></label>
+          <div class="row">
+            <input id="padSide" type="range" min="6" max="40" step="1" value="12">
+            <input id="padSideNum" type="number" min="0" max="64" step="1" value="12">
+          </div>
+        </div>
+        <div class="field">
+          <label><span>Border radius (px)</span> <span id="brVal">72</span></label>
+          <div class="row">
+            <input id="borderRadius" type="range" min="0" max="160" step="1" value="72">
+            <input id="borderRadiusNum" type="number" min="0" max="160" step="1" value="72">
+          </div>
+        </div>
+        <div class="field">
+          <label><span>Outline thickness (px)</span> <span id="btVal">2</span></label>
+          <div class="row">
+            <input id="borderThick" type="range" min="0" max="12" step="1" value="2">
+            <input id="borderThickNum" type="number" min="0" max="24" step="1" value="2">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label><span>Button color</span> <span id="colorVal">#7D2EFF</span></label>
+        <div class="row">
+          <input id="color" type="color" value="#7D2EFF">
+          <input id="colorHex" type="text" value="#7D2EFF" maxlength="9">
+        </div>
+        <div class="swatches" id="swatchesBtn" aria-label="Button color swatches"><button class="swatch-btn" type="button" title="#FFFFFF" aria-label="#FFFFFF" aria-pressed="false" style="background: rgb(255, 255, 255);"></button><button class="swatch-btn" type="button" title="#000000" aria-label="#000000" aria-pressed="false" style="background: rgb(0, 0, 0);"></button><button class="swatch-btn" type="button" title="#1D1D1D" aria-label="#1D1D1D" aria-pressed="false" style="background: rgb(29, 29, 29);"></button><button class="swatch-btn" type="button" title="#626262" aria-label="#626262" aria-pressed="false" style="background: rgb(98, 98, 98);"></button><button class="swatch-btn" type="button" title="#EDEEF2" aria-label="#EDEEF2" aria-pressed="false" style="background: rgb(237, 238, 242);"></button><button class="swatch-btn" type="button" title="#461F8C" aria-label="#461F8C" aria-pressed="false" style="background: rgb(70, 31, 140);"></button><button class="swatch-btn" type="button" title="#7D2EFF" aria-label="#7D2EFF" aria-pressed="true" style="background: rgb(125, 46, 255);"></button><button class="swatch-btn" type="button" title="#A981E9" aria-label="#A981E9" aria-pressed="false" style="background: rgb(169, 129, 233);"></button><button class="swatch-btn" type="button" title="#D1B5FF" aria-label="#D1B5FF" aria-pressed="false" style="background: rgb(209, 181, 255);"></button><button class="swatch-btn" type="button" title="#997C1F" aria-label="#997C1F" aria-pressed="false" style="background: rgb(153, 124, 31);"></button><button class="swatch-btn" type="button" title="#E6B30B" aria-label="#E6B30B" aria-pressed="false" style="background: rgb(230, 179, 11);"></button><button class="swatch-btn" type="button" title="#F8FB4C" aria-label="#F8FB4C" aria-pressed="false" style="background: rgb(248, 251, 76);"></button><button class="swatch-btn" type="button" title="#F7EFCD" aria-label="#F7EFCD" aria-pressed="false" style="background: rgb(247, 239, 205);"></button><button class="swatch-btn" type="button" title="#572D28" aria-label="#572D28" aria-pressed="false" style="background: rgb(87, 45, 40);"></button><button class="swatch-btn" type="button" title="#8F451D" aria-label="#8F451D" aria-pressed="false" style="background: rgb(143, 69, 29);"></button><button class="swatch-btn" type="button" title="#D44E2D" aria-label="#D44E2D" aria-pressed="false" style="background: rgb(212, 78, 45);"></button><button class="swatch-btn" type="button" title="#D9C996" aria-label="#D9C996" aria-pressed="false" style="background: rgb(217, 201, 150);"></button><button class="swatch-btn" type="button" title="#002687" aria-label="#002687" aria-pressed="false" style="background: rgb(0, 38, 135);"></button><button class="swatch-btn" type="button" title="#3B80C7" aria-label="#3B80C7" aria-pressed="false" style="background: rgb(59, 128, 199);"></button><button class="swatch-btn" type="button" title="#4BC1E9" aria-label="#4BC1E9" aria-pressed="false" style="background: rgb(75, 193, 233);"></button><button class="swatch-btn" type="button" title="#BFE3F2" aria-label="#BFE3F2" aria-pressed="false" style="background: rgb(191, 227, 242);"></button><button class="swatch-btn" type="button" title="#0F420F" aria-label="#0F420F" aria-pressed="false" style="background: rgb(15, 66, 15);"></button><button class="swatch-btn" type="button" title="#A6B240" aria-label="#A6B240" aria-pressed="false" style="background: rgb(166, 178, 64);"></button><button class="swatch-btn" type="button" title="#C9E02F" aria-label="#C9E02F" aria-pressed="false" style="background: rgb(201, 224, 47);"></button><button class="swatch-btn" type="button" title="#E0F2A1" aria-label="#E0F2A1" aria-pressed="false" style="background: rgb(224, 242, 161);"></button><button class="swatch-btn" type="button" title="#611930" aria-label="#611930" aria-pressed="false" style="background: rgb(97, 25, 48);"></button><button class="swatch-btn" type="button" title="#F563B1" aria-label="#F563B1" aria-pressed="false" style="background: rgb(245, 99, 177);"></button><button class="swatch-btn" type="button" title="#EDADC2" aria-label="#EDADC2" aria-pressed="false" style="background: rgb(237, 173, 194);"></button><button class="swatch-btn" type="button" title="#F7DBE5" aria-label="#F7DBE5" aria-pressed="false" style="background: rgb(247, 219, 229);"></button></div>
+      </div>
+
+      <div class="field">
+        <label><span>Text color (filled)</span> <span id="txtColorVal">#ffffff</span></label>
+        <div class="row">
+          <input id="txtColor" type="color" value="#ffffff">
+          <input id="txtColorHex" type="text" value="#ffffff" maxlength="9">
+        </div>
+        <div class="swatches" id="swatchesTxt" aria-label="Text color swatches"><button class="swatch-btn" type="button" title="#FFFFFF" aria-label="#FFFFFF" aria-pressed="true" style="background: rgb(255, 255, 255);"></button><button class="swatch-btn" type="button" title="#000000" aria-label="#000000" aria-pressed="false" style="background: rgb(0, 0, 0);"></button><button class="swatch-btn" type="button" title="#1D1D1D" aria-label="#1D1D1D" aria-pressed="false" style="background: rgb(29, 29, 29);"></button><button class="swatch-btn" type="button" title="#626262" aria-label="#626262" aria-pressed="false" style="background: rgb(98, 98, 98);"></button><button class="swatch-btn" type="button" title="#EDEEF2" aria-label="#EDEEF2" aria-pressed="false" style="background: rgb(237, 238, 242);"></button><button class="swatch-btn" type="button" title="#461F8C" aria-label="#461F8C" aria-pressed="false" style="background: rgb(70, 31, 140);"></button><button class="swatch-btn" type="button" title="#7D2EFF" aria-label="#7D2EFF" aria-pressed="false" style="background: rgb(125, 46, 255);"></button><button class="swatch-btn" type="button" title="#A981E9" aria-label="#A981E9" aria-pressed="false" style="background: rgb(169, 129, 233);"></button><button class="swatch-btn" type="button" title="#D1B5FF" aria-label="#D1B5FF" aria-pressed="false" style="background: rgb(209, 181, 255);"></button><button class="swatch-btn" type="button" title="#997C1F" aria-label="#997C1F" aria-pressed="false" style="background: rgb(153, 124, 31);"></button><button class="swatch-btn" type="button" title="#E6B30B" aria-label="#E6B30B" aria-pressed="false" style="background: rgb(230, 179, 11);"></button><button class="swatch-btn" type="button" title="#F8FB4C" aria-label="#F8FB4C" aria-pressed="false" style="background: rgb(248, 251, 76);"></button><button class="swatch-btn" type="button" title="#F7EFCD" aria-label="#F7EFCD" aria-pressed="false" style="background: rgb(247, 239, 205);"></button><button class="swatch-btn" type="button" title="#572D28" aria-label="#572D28" aria-pressed="false" style="background: rgb(87, 45, 40);"></button><button class="swatch-btn" type="button" title="#8F451D" aria-label="#8F451D" aria-pressed="false" style="background: rgb(143, 69, 29);"></button><button class="swatch-btn" type="button" title="#D44E2D" aria-label="#D44E2D" aria-pressed="false" style="background: rgb(212, 78, 45);"></button><button class="swatch-btn" type="button" title="#D9C996" aria-label="#D9C996" aria-pressed="false" style="background: rgb(217, 201, 150);"></button><button class="swatch-btn" type="button" title="#002687" aria-label="#002687" aria-pressed="false" style="background: rgb(0, 38, 135);"></button><button class="swatch-btn" type="button" title="#3B80C7" aria-label="#3B80C7" aria-pressed="false" style="background: rgb(59, 128, 199);"></button><button class="swatch-btn" type="button" title="#4BC1E9" aria-label="#4BC1E9" aria-pressed="false" style="background: rgb(75, 193, 233);"></button><button class="swatch-btn" type="button" title="#BFE3F2" aria-label="#BFE3F2" aria-pressed="false" style="background: rgb(191, 227, 242);"></button><button class="swatch-btn" type="button" title="#0F420F" aria-label="#0F420F" aria-pressed="false" style="background: rgb(15, 66, 15);"></button><button class="swatch-btn" type="button" title="#A6B240" aria-label="#A6B240" aria-pressed="false" style="background: rgb(166, 178, 64);"></button><button class="swatch-btn" type="button" title="#C9E02F" aria-label="#C9E02F" aria-pressed="false" style="background: rgb(201, 224, 47);"></button><button class="swatch-btn" type="button" title="#E0F2A1" aria-label="#E0F2A1" aria-pressed="false" style="background: rgb(224, 242, 161);"></button><button class="swatch-btn" type="button" title="#611930" aria-label="#611930" aria-pressed="false" style="background: rgb(97, 25, 48);"></button><button class="swatch-btn" type="button" title="#F563B1" aria-label="#F563B1" aria-pressed="false" style="background: rgb(245, 99, 177);"></button><button class="swatch-btn" type="button" title="#EDADC2" aria-label="#EDADC2" aria-pressed="false" style="background: rgb(237, 173, 194);"></button><button class="swatch-btn" type="button" title="#F7DBE5" aria-label="#F7DBE5" aria-pressed="false" style="background: rgb(247, 219, 229);"></button></div>
+      </div>
+
+      <div class="field">
+        <label><span>Text color (outlined)</span> <span id="outlinedTxtVal">#7D2EFF</span></label>
+        <div class="row">
+          <input id="outlinedTxt" type="color" value="#7D2EFF">
+          <input id="outlinedTxtHex" type="text" value="#7D2EFF" maxlength="9">
+        </div>
+        <div class="swatches" id="swatchesOutlined" aria-label="Outlined text color swatches"><button class="swatch-btn" type="button" title="#FFFFFF" aria-label="#FFFFFF" aria-pressed="false" style="background: rgb(255, 255, 255);"></button><button class="swatch-btn" type="button" title="#000000" aria-label="#000000" aria-pressed="false" style="background: rgb(0, 0, 0);"></button><button class="swatch-btn" type="button" title="#1D1D1D" aria-label="#1D1D1D" aria-pressed="false" style="background: rgb(29, 29, 29);"></button><button class="swatch-btn" type="button" title="#626262" aria-label="#626262" aria-pressed="false" style="background: rgb(98, 98, 98);"></button><button class="swatch-btn" type="button" title="#EDEEF2" aria-label="#EDEEF2" aria-pressed="false" style="background: rgb(237, 238, 242);"></button><button class="swatch-btn" type="button" title="#461F8C" aria-label="#461F8C" aria-pressed="false" style="background: rgb(70, 31, 140);"></button><button class="swatch-btn" type="button" title="#7D2EFF" aria-label="#7D2EFF" aria-pressed="true" style="background: rgb(125, 46, 255);"></button><button class="swatch-btn" type="button" title="#A981E9" aria-label="#A981E9" aria-pressed="false" style="background: rgb(169, 129, 233);"></button><button class="swatch-btn" type="button" title="#D1B5FF" aria-label="#D1B5FF" aria-pressed="false" style="background: rgb(209, 181, 255);"></button><button class="swatch-btn" type="button" title="#997C1F" aria-label="#997C1F" aria-pressed="false" style="background: rgb(153, 124, 31);"></button><button class="swatch-btn" type="button" title="#E6B30B" aria-label="#E6B30B" aria-pressed="false" style="background: rgb(230, 179, 11);"></button><button class="swatch-btn" type="button" title="#F8FB4C" aria-label="#F8FB4C" aria-pressed="false" style="background: rgb(248, 251, 76);"></button><button class="swatch-btn" type="button" title="#F7EFCD" aria-label="#F7EFCD" aria-pressed="false" style="background: rgb(247, 239, 205);"></button><button class="swatch-btn" type="button" title="#572D28" aria-label="#572D28" aria-pressed="false" style="background: rgb(87, 45, 40);"></button><button class="swatch-btn" type="button" title="#8F451D" aria-label="#8F451D" aria-pressed="false" style="background: rgb(143, 69, 29);"></button><button class="swatch-btn" type="button" title="#D44E2D" aria-label="#D44E2D" aria-pressed="false" style="background: rgb(212, 78, 45);"></button><button class="swatch-btn" type="button" title="#D9C996" aria-label="#D9C996" aria-pressed="false" style="background: rgb(217, 201, 150);"></button><button class="swatch-btn" type="button" title="#002687" aria-label="#002687" aria-pressed="false" style="background: rgb(0, 38, 135);"></button><button class="swatch-btn" type="button" title="#3B80C7" aria-label="#3B80C7" aria-pressed="false" style="background: rgb(59, 128, 199);"></button><button class="swatch-btn" type="button" title="#4BC1E9" aria-label="#4BC1E9" aria-pressed="false" style="background: rgb(75, 193, 233);"></button><button class="swatch-btn" type="button" title="#BFE3F2" aria-label="#BFE3F2" aria-pressed="false" style="background: rgb(191, 227, 242);"></button><button class="swatch-btn" type="button" title="#0F420F" aria-label="#0F420F" aria-pressed="false" style="background: rgb(15, 66, 15);"></button><button class="swatch-btn" type="button" title="#A6B240" aria-label="#A6B240" aria-pressed="false" style="background: rgb(166, 178, 64);"></button><button class="swatch-btn" type="button" title="#C9E02F" aria-label="#C9E02F" aria-pressed="false" style="background: rgb(201, 224, 47);"></button><button class="swatch-btn" type="button" title="#E0F2A1" aria-label="#E0F2A1" aria-pressed="false" style="background: rgb(224, 242, 161);"></button><button class="swatch-btn" type="button" title="#611930" aria-label="#611930" aria-pressed="false" style="background: rgb(97, 25, 48);"></button><button class="swatch-btn" type="button" title="#F563B1" aria-label="#F563B1" aria-pressed="false" style="background: rgb(245, 99, 177);"></button><button class="swatch-btn" type="button" title="#EDADC2" aria-label="#EDADC2" aria-pressed="false" style="background: rgb(237, 173, 194);"></button><button class="swatch-btn" type="button" title="#F7DBE5" aria-label="#F7DBE5" aria-pressed="false" style="background: rgb(247, 219, 229);"></button></div>
+      </div>
+
+      <div class="field">
+        <label><span>Destination URL (for copy)</span></label>
+        <input id="href" type="text" placeholder="https://example.com" value="#">
+      </div>
+
+      <div class="field">
+        <label><span>Label (email safe)</span></label>
+        <input id="label" type="text" value="Get started">
+      <div data-lastpass-icon-root="" style="position: relative !important; height: 0px !important; width: 0px !important; display: initial !important; float: left !important;"><template shadowrootmode="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-lastpass-icon="true" data-testid="infield-icon" style="position: absolute; cursor: pointer; height: 22px; max-height: 22px; width: 22px; max-width: 22px; top: 8px; left: 244px; z-index: auto; color: rgb(186, 192, 202);"><rect x="0.680176" y="0.763062" width="22.6392" height="22.4737" rx="4" fill="currentColor"></rect><path fill-rule="evenodd" clip-rule="evenodd" d="M19.7935 7.9516C19.7935 7.64414 20.0427 7.3949 20.3502 7.3949C20.6576 7.3949 20.9069 7.64414 20.9069 7.9516V16.0487C20.9069 16.3562 20.6576 16.6054 20.3502 16.6054C20.0427 16.6054 19.7935 16.3562 19.7935 16.0487V7.9516Z" fill="white"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M4.76288 13.6577C5.68525 13.6577 6.43298 12.9154 6.43298 11.9998C6.43298 11.0842 5.68525 10.3419 4.76288 10.3419C3.8405 10.3419 3.09277 11.0842 3.09277 11.9998C3.09277 12.9154 3.8405 13.6577 4.76288 13.6577Z" fill="white"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M10.3298 13.6577C11.2521 13.6577 11.9999 12.9154 11.9999 11.9998C11.9999 11.0842 11.2521 10.3419 10.3298 10.3419C9.4074 10.3419 8.65967 11.0842 8.65967 11.9998C8.65967 12.9154 9.4074 13.6577 10.3298 13.6577Z" fill="white"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M15.8964 13.6577C16.8188 13.6577 17.5665 12.9154 17.5665 11.9998C17.5665 11.0842 16.8188 10.3419 15.8964 10.3419C14.974 10.3419 14.2263 11.0842 14.2263 11.9998C14.2263 12.9154 14.974 13.6577 15.8964 13.6577Z" fill="white"></path></svg></template></div></div>
+
+      <footer>
+        Best practices: table structure + VML, <code>display:inline-block</code> anchor, web-safe font stack (<code>Helvetica, Arial, sans-serif</code>), bold weight, inline styles.
+      </footer>
+    </aside>
+
+    <main>
+      <div class="tabs-wrap">
+        <div class="tabs">
+          <button class="tab" id="tab-grid" role="tab" aria-selected="false" aria-controls="panel-grid">Lab</button>
+          <button class="tab alert" id="tab-email" role="tab" aria-selected="true" aria-controls="panel-email">
+            <span class="icon" aria-hidden="true">🧪</span>
+            Email Preview
+            <span id="badgeEmail" class="badge">4</span>
+          </button>
+        </div>
+        <div class="tabs-seam" aria-hidden="true"></div>
+      </div>
+
+      <section id="panel-grid" role="tabpanel" aria-labelledby="tab-grid" class="hidden">
+        <div class="buttons-grid" id="grid" aria-live="polite">
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 3px 6px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 0.5</div><div class="kv">Font: 8px</div><div class="kv">Padding: 3/3px TB, 6px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 47×14px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle active" type="button" title="Toggle in Email Preview" aria-pressed="true" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 4px 9px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 0.75</div><div class="kv">Font: 8px</div><div class="kv">Padding: 4/4px TB, 9px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 53×16px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 5px 12px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 1</div><div class="kv">Font: 9px</div><div class="kv">Padding: 5/5px TB, 12px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 63×19px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 6px 15px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 1.25</div><div class="kv">Font: 11px</div><div class="kv">Padding: 6/6px TB, 15px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 78×23px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 8px 18px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 1.5</div><div class="kv">Font: 14px</div><div class="kv">Padding: 8/8px TB, 18px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 96×30px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle active" type="button" title="Toggle in Email Preview" aria-pressed="true" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 9px 21px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 1.75</div><div class="kv">Font: 16px</div><div class="kv">Padding: 9/9px TB, 21px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 111×34px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 10px 24px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 18px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 2</div><div class="kv">Font: 18px</div><div class="kv">Padding: 10/10px TB, 24px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 126×38px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 11px 27px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 2.25</div><div class="kv">Font: 20px</div><div class="kv">Padding: 11/11px TB, 27px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 140×42px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 13px 30px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 2.5</div><div class="kv">Font: 20px</div><div class="kv">Padding: 13/13px TB, 30px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 146×46px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 14px 33px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 2.75</div><div class="kv">Font: 20px</div><div class="kv">Padding: 14/14px TB, 33px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 152×48px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 15px 36px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 3</div><div class="kv">Font: 20px</div><div class="kv">Padding: 15/15px TB, 36px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 158×50px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 16px 39px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Fill</div><div class="kv">Factor: 3.25</div><div class="kv">Font: 20px</div><div class="kv">Padding: 16/16px TB, 39px LR</div><div class="kv">Radius: 72px</div><div class="kv">Text: #ffffff</div><div class="kv">Size: 164×52px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 3px 6px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 0.5</div><div class="kv">Font: 8px</div><div class="kv">Padding: 3/3px TB, 6px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 51×18px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle active" type="button" title="Toggle in Email Preview" aria-pressed="true" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 4px 9px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 0.75</div><div class="kv">Font: 8px</div><div class="kv">Padding: 4/4px TB, 9px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 57×20px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 5px 12px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 1</div><div class="kv">Font: 9px</div><div class="kv">Padding: 5/5px TB, 12px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 67×23px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 6px 15px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 1.25</div><div class="kv">Font: 11px</div><div class="kv">Padding: 6/6px TB, 15px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 82×27px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 8px 18px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 1.5</div><div class="kv">Font: 14px</div><div class="kv">Padding: 8/8px TB, 18px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 100×34px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle active" type="button" title="Toggle in Email Preview" aria-pressed="true" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 9px 21px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 1.75</div><div class="kv">Font: 16px</div><div class="kv">Padding: 9/9px TB, 21px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 115×38px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 10px 24px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 18px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 2</div><div class="kv">Font: 18px</div><div class="kv">Padding: 10/10px TB, 24px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 130×42px</div><div class="kv kv-contrast ok" title="WCAG AA (Normal) threshold ≥4.5">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 11px 27px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 2.25</div><div class="kv">Font: 20px</div><div class="kv">Padding: 11/11px TB, 27px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 144×46px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 13px 30px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 2.5</div><div class="kv">Font: 20px</div><div class="kv">Padding: 13/13px TB, 30px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 150×50px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 14px 33px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 2.75</div><div class="kv">Font: 20px</div><div class="kv">Padding: 14/14px TB, 33px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 156×52px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 15px 36px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 3</div><div class="kv">Font: 20px</div><div class="kv">Padding: 15/15px TB, 36px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 162×54px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <div class="preview-wrap" data-preview=""><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 16px 39px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 20px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div>
+      <div class="meta" data-meta=""><div class="kv">Type: Outlined</div><div class="kv">Factor: 3.25</div><div class="kv">Font: 20px</div><div class="kv">Padding: 16/16px TB, 39px LR</div><div class="kv">Radius: 72px</div><div class="kv">Border: 2px</div><div class="kv">Text: #7d2eff</div><div class="kv">Size: 168×56px</div><div class="kv kv-contrast ok" title="WCAG AA (Large) threshold ≥3.0">Contrast: 5.7:1</div></div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" data-view="">View HTML</button>
+          <button class="btn" data-copy="">Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn btn-toggle" type="button" title="Toggle in Email Preview" aria-pressed="false" data-include="">
+            <span aria-hidden="true">🧪</span>
+            <span class="sr-only">Toggle in preview</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+      </section>
+
+      <section id="panel-email" role="tabpanel" aria-labelledby="tab-email" class="">
+        <div class="email-controls">
+          <button class="btn" id="copyEmailBtn">Copy email design for testing</button>
+          <div class="ctrl-right">
+            <label><input type="checkbox" id="centerToggle"> Center buttons</label>
+            <label>View: <input type="radio" name="viewport" id="viewDesktop" checked=""> Desktop (640px)</label>
+            <label><input type="radio" name="viewport" id="viewMobile"> Mobile (320px)</label>
+          </div>
+        </div>
+        <div class="email-wrap">
+          <div class="email-canvas" id="emailCanvas">
+            <div class="email-hero"></div>
+            <div class="email-body">
+              <h2>Welcome to Gong's Button Lab</h2>
+              <div class="email-flow" id="emailFlow"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><div class="btn-slot"><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 8px 18px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div><p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p><div class="btn-slot"><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 8px 18px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div><p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><div class="btn-slot"><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: rgb(125, 46, 255); color: rgb(255, 255, 255); text-decoration: none; border-radius: 72px; padding: 3px 6px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.</p><div class="btn-slot"><a href="https://git.ouryahoo.com/pages/mikegong/gongsbuttonlabexperiment/v56.html#" role="button" style="background: transparent; color: rgb(125, 46, 255); text-decoration: none; border-radius: 72px; padding: 3px 6px; border: 2px solid rgb(125, 46, 255); display: inline-block; font-family: Helvetica, Arial, sans-serif; font-size: 8px; font-weight: bold; line-height: 1; white-space: nowrap;">Draft now</a></div></div>
+              <div id="emailEmpty" class="empty-hint hidden">No buttons selected yet. Go to the Lab and toggle the preview icon for the buttons you want to see here.</div>
+            </div>
+            <div class="email-footer">
+              You're receiving this email because you signed up for updates. Unsubscribe at any time.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="card"></template>
+
+  <dialog id="modal">
+    <div class="modal-head">
+      <strong>HTML to copy</strong>
+      <button class="close" onclick="document.getElementById(&#39;modal&#39;).close()">Close</button>
+    </div>
+    <div class="modal-body">
+      <pre><code id="code"></code></pre>
+    </div>
+  </dialog>
+
+  <script>
+
+    // --- Color utilities for WCAG contrast ---
+    function hexToRgb(hex) {
+      const h = hex.replace('#','').trim();
+      const n = h.length;
+      const parse = (s) => parseInt(s, 16);
+      const r = n === 3 ? parse(h[0]+h[0]) : parse(h.slice(0,2));
+      const g = n === 3 ? parse(h[1]+h[1]) : parse(h.slice(2,4));
+      const b = n === 3 ? parse(h[2]+h[2]) : parse(h.slice(4,6));
+      return { r, g, b };
+    }
+    function srgbToLin(c) { c/=255; return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+    function relLuminance(hex) {
+      const {r,g,b} = hexToRgb(hex);
+      const R = srgbToLin(r), G = srgbToLin(g), B = srgbToLin(b);
+      return 0.2126*R + 0.7152*G + 0.0722*B;
+    }
+    function contrastRatio(fgHex, bgHex) {
+      const L1 = relLuminance(fgHex);
+      const L2 = relLuminance(bgHex);
+      const lighter = Math.max(L1, L2);
+      const darker  = Math.min(L1, L2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+    function isLargeText(px, isBold) {
+      // WCAG: >=18.66px (14pt) bold OR >=24px normal
+      return (isBold && px >= 18.66) || (!isBold && px >= 24);
+    }
+
+    // 12 fill + 12 outlined
+    const FACTORS = Array.from({ length: 12 }, (_, i) => +(0.5 + i * 0.25).toFixed(2));
+    const VARIANTS = [
+      ...FACTORS.map(f => ({ f, outlined: false })),
+      ...FACTORS.map(f => ({ f, outlined: true })),
+    ];
+
+    const grid = document.getElementById('grid');
+    const tpl = document.getElementById('card');
+
+    // Controls
+    const fontSize = document.getElementById('fontSize');
+    const fontSizeNum = document.getElementById('fontSizeNum');
+    const padVert = document.getElementById('padVert');
+    const padVertNum = document.getElementById('padVertNum');
+    const padSide = document.getElementById('padSide');
+    const padSideNum = document.getElementById('padSideNum');
+    const borderRadius = document.getElementById('borderRadius');
+    const borderRadiusNum = document.getElementById('borderRadiusNum');
+    const borderThick = document.getElementById('borderThick');
+    const borderThickNum = document.getElementById('borderThickNum');
+
+    const hrefEl = document.getElementById('href');
+    const labelEl = document.getElementById('label');
+
+    // Colors
+    const color = document.getElementById('color');
+    const colorHex = document.getElementById('colorHex');
+    const txtColor = document.getElementById('txtColor');
+    const txtColorHex = document.getElementById('txtColorHex');
+    const outlinedTxt = document.getElementById('outlinedTxt');
+    const outlinedTxtHex = document.getElementById('outlinedTxtHex');
+
+    // Swatch containers
+    const swatchesBtn = document.getElementById('swatchesBtn');
+    const swatchesTxt = document.getElementById('swatchesTxt');
+    const swatchesOutlined = document.getElementById('swatchesOutlined');
+
+    // Value labels
+    const fontSizeVal = document.getElementById('fontSizeVal');
+    const pvVal = document.getElementById('pvVal');
+    const psVal = document.getElementById('psVal');
+    const brVal = document.getElementById('brVal');
+    const btVal = document.getElementById('btVal');
+    const colorVal = document.getElementById('colorVal');
+    const txtColorVal = document.getElementById('txtColorVal');
+    const outlinedTxtVal = document.getElementById('outlinedTxtVal');
+
+    // Tabs
+    const tabGrid = document.getElementById('tab-grid');
+    const tabEmail = document.getElementById('tab-email');
+    const badgeEmail = document.getElementById('badgeEmail');
+    const panelGrid = document.getElementById('panel-grid');
+    const panelEmail = document.getElementById('panel-email');
+
+    // Email controls
+    const centerToggle = document.getElementById('centerToggle');
+    const viewDesktop = document.getElementById('viewDesktop');
+    const viewMobile = document.getElementById('viewMobile');
+    const emailCanvas = document.getElementById('emailCanvas');
+    const copyEmailBtn = document.getElementById('copyEmailBtn');
+
+    // Selected set
+    const selected = new Set();
+
+    
+    
+    // --- Static Lorem (3 sentences; cycled starts per paragraph) ---
+    const LOREM_SENTENCES_STATIC = [
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+      "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.",
+      "Vestibulum ac diam sit amet quam vehicula elementum sed sit amet dui.",
+      "Pellentesque in ipsum id orci porta dapibus.",
+      "Vivamus suscipit tortor eget felis porttitor volutpat.",
+      "Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a.",
+      "Nulla porttitor accumsan tincidunt.",
+      "Praesent sapien massa, convallis a pellentesque nec, egestas non nisi."
+    ];
+    function staticParaAt(idx) {
+      const L = LOREM_SENTENCES_STATIC.length;
+      const a = LOREM_SENTENCES_STATIC[idx % L];
+      const b = LOREM_SENTENCES_STATIC[(idx + 1) % L];
+      const c = LOREM_SENTENCES_STATIC[(idx + 2) % L];
+      return a + " " + b + " " + c;
+    }
+    // ---------------------------------------------------------------
+
+
+
+    function switchTab(tab) {
+      const isGrid = tab === 'grid';
+      tabGrid.setAttribute('aria-selected', isGrid ? 'true' : 'false');
+      tabEmail.setAttribute('aria-selected', isGrid ? 'false' : 'true');
+      panelGrid.classList.toggle('hidden', !isGrid);
+      panelEmail.classList.toggle('hidden', isGrid);
+      if (!isGrid) { updateEmailPreview(); }
+    }
+    tabGrid.addEventListener('click', () => switchTab('grid'));
+    tabEmail.addEventListener('click', () => switchTab('email'));
+
+    function link(a, b, onChange) {
+      const sync = (src, dst, fmt = (v) => v) => {
+        dst.value = src.value;
+        onChange?.(fmt(src.value));
+        render();
+      };
+      a.addEventListener('input', () => sync(a, b, (v) => +v));
+      b.addEventListener('input', () => sync(b, a, (v) => +v));
+    }
+
+    link(fontSize, fontSizeNum, (v) => (fontSizeVal.textContent = v));
+    link(padVert, padVertNum, (v) => (pvVal.textContent = v));
+    link(padSide, padSideNum, (v) => (psVal.textContent = v));
+    link(borderRadius, borderRadiusNum, (v) => (brVal.textContent = v));
+    link(borderThick, borderThickNum, (v) => (btVal.textContent = v));
+
+    function validHex(val) {
+      const v = val.trim();
+      if (!v) return null;
+      const withHash = v.startsWith('#') ? v : '#' + v;
+      if (/^#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(withHash)) return withHash.toUpperCase();
+      return null;
+    }
+    function bindColorInputs(picker, hexInput, labelEl) {
+      picker.addEventListener('input', () => {
+        hexInput.value = picker.value.toUpperCase();
+        labelEl.textContent = picker.value.toUpperCase();
+        render();
+      });
+      hexInput.addEventListener('input', () => {
+        const v = validHex(hexInput.value);
+        if (v) { picker.value = v; labelEl.textContent = v; render(); }
+      });
+      hexInput.addEventListener('blur', () => {
+        const v = validHex(hexInput.value);
+        if (v) hexInput.value = v;
+      });
+    }
+    bindColorInputs(color, colorHex, colorVal);
+    bindColorInputs(txtColor, txtColorHex, txtColorVal);
+    bindColorInputs(outlinedTxt, outlinedTxtHex, outlinedTxtVal);
+
+    // Palette with #FFFFFF first, then #000000, then the rest
+    const PALETTE = ["#FFFFFF","#000000","#1D1D1D","#626262","#EDEEF2","#461F8C","#7D2EFF","#A981E9","#D1B5FF","#997C1F","#E6B30B","#F8FB4C","#F7EFCD","#572D28","#8F451D","#D44E2D","#D9C996","#002687","#3B80C7","#4BC1E9","#BFE3F2","#0F420F","#A6B240","#C9E02F","#E0F2A1","#611930","#F563B1","#EDADC2","#F7DBE5"];
+
+    function buildSwatches(container, picker, hexInput, labelEl) {
+      container.innerHTML = '';
+      PALETTE.forEach((c) => {
+        const btn = document.createElement('button');
+        btn.className = 'swatch-btn';
+        btn.style.background = c;
+        btn.type = 'button';
+        btn.title = c;
+        btn.setAttribute('aria-label', c);
+        btn.addEventListener('click', () => {
+          picker.value = c; hexInput.value = c; labelEl.textContent = c; render();
+          Array.from(container.children).forEach(el => el.setAttribute('aria-pressed', 'false'));
+          btn.setAttribute('aria-pressed', 'true');
+        });
+        btn.setAttribute('aria-pressed', picker.value.toUpperCase() === c.toUpperCase() ? 'true' : 'false');
+        container.appendChild(btn);
+      });
+    }
+
+    hrefEl.addEventListener('input', render);
+    labelEl.addEventListener('input', render);
+
+    centerToggle?.addEventListener('change', () => updateEmailPreview());
+    viewDesktop?.addEventListener('change', () => { if (viewDesktop.checked) emailCanvas.classList.remove('mobile'); });
+    viewMobile?.addEventListener('change', () => { if (viewMobile.checked) emailCanvas.classList.add('mobile'); });
+
+    function measureTextWidth(text, fontPx) {
+      const canvas = measureTextWidth.canvas || (measureTextWidth.canvas = document.createElement('canvas'));
+      const ctx = canvas.getContext('2d');
+      ctx.font = `${fontPx}px Helvetica, Arial, sans-serif`;
+      return Math.ceil(ctx.measureText(text).width);
+    }
+
+    function escapeHtml(s) {
+      return (s + '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));
+    }
+
+    function buildButtonHTML({ pt, pb, ps, fontPx, radius, bg, fg, fgOutlined, href, label, outlined, borderPx }) {
+      const textColor = outlined ? fgOutlined : fg;
+      const textWidth = measureTextWidth(label, fontPx);
+      const width = textWidth + ps * 2 + (outlined ? borderPx * 2 : 0);
+      const height = fontPx + pt + pb + (outlined ? borderPx * 2 : 0);
+      const arc = Math.min(50, Math.round((radius / Math.max(1, height)) * 100));
+
+      const aStyle = [
+        `background:${outlined ? 'transparent' : bg}`,
+        `color:${textColor}`,
+        'text-decoration:none',
+        `border-radius:${radius}px`,
+        `padding:${pt}px ${ps}px ${pb}px`,
+        outlined ? `border:${borderPx}px solid ${bg}` : `border:${borderPx}px solid ${bg}`,
+        'display:inline-block',
+        'font-family:Helvetica, Arial, sans-serif',
+        `font-size:${fontPx}px`,
+        'font-weight:bold',
+        'line-height:1',
+        'white-space:nowrap',
+        '-webkit-text-size-adjust:none',
+        'mso-padding-alt:0',
+      ].join(';');
+
+      const anchor = `<a href="${escapeHtml(href || '#')}" target="_blank" role="button" style="${aStyle}">${escapeHtml(label)}</a>`;
+
+      const vml = `<!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+  href="${escapeHtml(href || '#')}"
+  style="v-text-anchor:middle; width:${width}px; height:${height}px;"
+  arcsize="${arc}%" ${outlined ? `strokecolor="${bg}" strokeweight="${borderPx}px" fillcolor="#FFFFFF"` : `strokecolor="${bg}" strokeweight="${borderPx}px" fillcolor="${bg}"`}>
+  <w:anchorlock/>
+  <center style="color:${textColor}; font-family:Helvetica, Arial, sans-serif; font-size:${fontPx}px; font-weight:bold;">
+    ${escapeHtml(label)}
+  </center>
+</v:roundrect>
+<![endif]-->`;
+
+      const tdAttrs = outlined
+        ? `style="border-radius:${radius}px;"`
+        : `align="center" bgcolor="${bg}" style="border-radius:${radius}px;"`;
+
+      const html = `<!-- START Button (${outlined ? 'Outlined' : 'Fill'}) -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0">
+  <tr>
+    <td ${tdAttrs}>
+      ${vml}
+      <!--[if !mso]><!-- -->
+      ${anchor}
+      <!--<![endif]-->
+    </td>
+  </tr>
+</table>
+<!-- END Button -->`;
+
+      return { html, width, height };
+    }
+
+    function makePreviewAnchor({ url, text, bg, fg, fgOutlined, radius, pt, ps, pb, fontPx, outlined, borderPx }) {
+      const a = document.createElement('a');
+      a.href = url; a.textContent = text; a.setAttribute('role', 'button');
+      a.style.cssText = [
+        `background:${outlined ? 'transparent' : bg}`,
+        `color:${outlined ? fgOutlined : fg}`,
+        'text-decoration:none',
+        `border-radius:${radius}px`,
+        `padding:${pt}px ${ps}px ${pb}px`,
+        outlined ? `border:${borderPx}px solid ${bg}` : `border:${borderPx}px solid ${bg}`,
+        'display:inline-block', 'font-family:Helvetica, Arial, sans-serif',
+        `font-size:${fontPx}px`, 'font-weight:bold', 'line-height:1',
+        'white-space:nowrap',
+      ].join(';');
+      return a;
+    }
+
+    function cardKey(f, outlined) { return `f:${f}|o:${outlined ? 1 : 0}`; }
+
+    function updateEmailTabIndicator() {
+      const count = selected.size;
+      if (count > 0) { tabEmail.classList.add('alert'); badgeEmail.textContent = count; badgeEmail.classList.remove('hidden'); }
+      else { tabEmail.classList.remove('alert'); badgeEmail.textContent = '0'; badgeEmail.classList.add('hidden'); }
+    }
+
+    function render() {
+      const baseVert = +padVert.value;
+      const baseSide = +padSide.value;
+      const baseFont = +fontSize.value;
+      const radius = +borderRadius.value;
+      const borderPx = +borderThick.value;
+
+      const bg = color.value;
+      const fg = txtColor.value;
+      const fgOutlined = outlinedTxt.value;
+      const url = hrefEl.value.trim() || '#';
+      const text = labelEl.value || 'Get started';
+
+      // build swatches (all three)
+      buildSwatches(swatchesBtn, color, colorHex, colorVal);
+      buildSwatches(swatchesTxt, txtColor, txtColorHex, txtColorVal);
+      buildSwatches(swatchesOutlined, outlinedTxt, outlinedTxtHex, outlinedTxtVal);
+
+      grid.innerHTML = '';
+      VARIANTS.forEach((v) => {
+        const f = v.f, outlined = v.outlined;
+        const pt = Math.round(baseVert * f);
+        const pb = Math.round(baseVert * f);
+        const ps = Math.round(baseSide * f);
+        const fontPx = Math.min(20, Math.max(8, Math.round(baseFont * f)));
+
+        const { html, width, height } = buildButtonHTML({ pt, pb, ps, fontPx, radius, bg, fg, fgOutlined, href: url, label: text, outlined, borderPx });
+
+        const node = tpl.content.cloneNode(true);
+        const preview = node.querySelector('[data-preview]');
+        const meta = node.querySelector('[data-meta]');
+        const viewBtn = node.querySelector('[data-view]');
+        const copyBtn = node.querySelector('[data-copy]');
+        const includeBtn = node.querySelector('[data-include]');
+        const key = cardKey(f, outlined);
+
+        preview.appendChild(makePreviewAnchor({ url, text, bg, fg, fgOutlined, radius, pt, ps, pb, fontPx, outlined, borderPx }));
+
+        meta.innerHTML = '';
+        const chips = [
+          { k: 'Type', v: outlined ? 'Outlined' : 'Fill' },
+          { k: 'Factor', v: f },
+          { k: 'Font', v: fontPx + 'px' },
+          { k: 'Padding', v: `${pt}/${pb}px TB, ${ps}px LR` },
+          { k: 'Radius', v: radius + 'px' },
+          ...(outlined ? [{ k: 'Border', v: borderPx + 'px' }, { k: 'Text', v: fgOutlined }] : [{ k: 'Text', v: fg }]),
+          { k: 'Size', v: `${width}×${height}px` },
+        ];
+        chips.forEach((c) => {
+          const chip = document.createElement('div');
+          chip.className = 'kv';
+          chip.textContent = `${c.k}: ${c.v}`;
+          meta.appendChild(chip);
+        });
+
+        
+        // Compute WCAG contrast ratio for this variant
+        (function(){
+          const fgColor = outlined ? fgOutlined : fg;
+          const bgColor = outlined ? '#FFFFFF' : bg; // assume white canvas for outlined
+          const ratio = contrastRatio(fgColor, bgColor);
+          const ratioTxt = (Math.round(ratio * 10) / 10).toFixed(1);
+          const meets = isLargeText(fontPx, true) ? ratio >= 3.0 : ratio >= 4.5;
+          const chip = document.createElement('div');
+          chip.className = 'kv kv-contrast ' + (meets ? 'ok' : 'bad');
+          chip.textContent = `Contrast: ${ratioTxt}:1`;
+          chip.title = 'WCAG ' + (isLargeText(fontPx, true) ? 'AA (Large)' : 'AA (Normal)') + ' threshold ' + (isLargeText(fontPx, true) ? '≥3.0' : '≥4.5');
+          meta.appendChild(chip);
+        })();
+const setActive = (on) => { includeBtn.classList.toggle('active', on); includeBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+        setActive(selected.has(key));
+
+        includeBtn.addEventListener('click', () => {
+          if (selected.has(key)) { selected.delete(key); setActive(false); }
+          else { selected.add(key); setActive(true); }
+          updateEmailTabIndicator();
+          if (!panelEmail.classList.contains('hidden')) updateEmailPreview();
+        });
+
+        viewBtn.addEventListener('click', () => showCode(html));
+        copyBtn.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(html); copyBtn.textContent = 'Copied!'; setTimeout(() => (copyBtn.textContent = 'Copy HTML'), 900); }
+          catch { showCode(html); }
+        });
+
+        grid.appendChild(node);
+      });
+
+      updateEmailTabIndicator();
+      if (!panelEmail.classList.contains('hidden')) updateEmailPreview();
+    }
+
+    function updateEmailPreview() { let __paraIdx = 0;
+      const baseVert = +padVert.value;
+      const baseSide = +padSide.value;
+      const baseFont = +fontSize.value;
+      const radius = +borderRadius.value;
+      const borderPx = +borderThick.value;
+      const bg = color.value;
+      const fg = txtColor.value;
+      const fgOutlined = outlinedTxt.value;
+      const url = hrefEl.value.trim() || '#';
+      const text = labelEl.value || 'Get started';
+
+      const flow = document.getElementById('emailFlow');
+      const empty = document.getElementById('emailEmpty');
+      flow.innerHTML = '';
+
+      let chosen = VARIANTS.filter((v) => selected.has(cardKey(v.f, v.outlined)));
+      if (chosen.length === 0) { empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+
+      chosen = chosen.sort((a, b) => b.f - a.f || (a.outlined ? 1 : -1));
+
+      const centered = centerToggle.checked;
+      flow.classList.toggle('center', centered);
+
+      chosen.forEach(({ f, outlined }) => {
+        const p = document.createElement('p');
+        p.textContent = staticParaAt(__paraIdx++); // <-- stable within this preview session
+        flow.appendChild(p);
+
+        const pt = Math.round(baseVert * f);
+        const pb = Math.round(baseVert * f);
+        const ps = Math.round(baseSide * f);
+        const fontPx = Math.min(20, Math.max(8, Math.round(baseFont * f)));
+        const a = makePreviewAnchor({ url, text, bg, fg, fgOutlined, radius, pt, ps, pb, fontPx, outlined, borderPx });
+
+        const slot = document.createElement('div'); slot.className = 'btn-slot'; slot.appendChild(a); flow.appendChild(slot);
+      });
+    }
+
+    function showCode(html) {
+      const modal = document.getElementById('modal');
+      const code = document.getElementById('code');
+      code.textContent = html;
+      modal.showModal();
+    }
+
+    function buildFullEmailHtml() {
+      const baseVert = +padVert.value, baseSide = +padSide.value, baseFont = +fontSize.value, radius = +borderRadius.value, borderPx = +borderThick.value;
+      const bg = color.value, fg = txtColor.value, fgOutlined = outlinedTxt.value, url = hrefEl.value.trim() || '#', text = labelEl.value || 'Get started';
+      const centered = centerToggle.checked;
+
+      let chosen = VARIANTS.filter((v) => selected.has(cardKey(v.f, v.outlined))).sort((a,b)=> b.f - a.f || (a.outlined ? 1 : -1));
+      if (chosen.length === 0) return '<!-- No buttons selected -->';
+
+      const heroUrl = 'yahoo-image.jpg';
+
+      let blocks = [];
+      blocks.push(`
+<tr>
+  <td style="padding:0;">
+    <img src="yahoo-image.jpg" />
+  </td>
+</tr>`);
+      blocks.push(`
+<tr>
+  <td style="padding:24px; font-family:Helvetica, Arial, sans-serif; color:#111111;">
+    <h2 style="margin:0 0 10px; font-size:20px; line-height:1.3; font-weight:bold;">Welcome to Gong&apos;s Button Lab</h2>
+  </td>
+</tr>`);
+
+      // For the export, we generate a fresh lorem sequence to keep it self-contained.
+      let __exportParaIdx = 0;
+    function exportLoremPara() { return staticParaAt(__exportParaIdx++); }
+
+      chosen.forEach(({ f, outlined }) => {
+        const pt = Math.round(baseVert * f), pb = Math.round(baseVert * f), ps = Math.round(baseSide * f);
+        const fontPx = Math.min(20, Math.max(8, Math.round(baseFont * f)));
+        const { html } = buildButtonHTML({ pt, pb, ps, fontPx, radius, bg, fg, fgOutlined, href: url, label: text, outlined, borderPx });
+        blocks.push(`
+<tr>
+  <td style="padding:0 24px 8px 24px; font-family:Helvetica, Arial, sans-serif; color:#333333; font-size:14px; line-height:1.5;">
+    ${exportLoremPara()}
+  </td>
+</tr>
+<tr>
+  <td style="padding:0 24px 18px 24px; ${centered ? 'text-align:center;' : ''}">
+    ${html}
+  </td>
+</tr>`);
+      });
+
+      blocks.push(`
+<tr>
+  <td style="padding:14px 24px 24px 24px; font-family:Helvetica, Arial, sans-serif; font-size:12px; color:#666666;">
+    You're receiving this email because you signed up for updates. Unsubscribe at any time.
+  </td>
+</tr>`);
+
+      const doc = `<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gong's Button Lab</title>
+</head>
+<body style="margin:0; padding:0; background:#f0f2f7;">
+  <center style="width:100%; background:#f0f2f7;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td align="center" style="padding:20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="width:640px; max-width:640px; background:#ffffff; border-radius:8px; overflow:hidden;">
+            ${blocks.join('\n')}
+          </table>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+</html>`;
+      return doc.trim();
+    }
+
+    function downloadEmail(html) {
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'email.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function copyEmailDesign() {
+      const html = buildFullEmailHtml();
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const item = new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([html.replace(/<[^>]+>/g, '')], { type: 'text/plain' }),
+          });
+          await navigator.clipboard.write([item]);
+          copyEmailBtn.textContent = 'Copied Design!';
+          setTimeout(() => (copyEmailBtn.textContent = 'Copy email design for testing'), 1200);
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        const tmp = document.createElement('div');
+        tmp.contentEditable = 'true'; tmp.style.position = 'fixed'; tmp.style.left = '-9999px';
+        tmp.innerHTML = html; document.body.appendChild(tmp);
+        const range = document.createRange(); range.selectNodeContents(tmp);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        const ok = document.execCommand('copy');
+        sel.removeAllRanges(); tmp.remove();
+        if (ok) { copyEmailBtn.textContent = 'Copied Design!'; setTimeout(() => (copyEmailBtn.textContent = 'Copy email design for testing'), 1200); return; }
+      } catch (e) {}
+
+      downloadEmail(html);
+      copyEmailBtn.textContent = 'Downloaded email.html';
+      setTimeout(() => (copyEmailBtn.textContent = 'Copy email design for testing'), 1600);
+    }
+
+    copyEmailBtn.addEventListener('click', copyEmailDesign);
+
+    
+    // Tooltip (instant + cursor-follow)
+    const TOOLTIP_TEXT = 'Copy and paste this design into a blank email window. Send it to yourself to test buttons in light and dark mode.';
+    let tooltipEl = null;
+    let moveHandler = null;
+
+    function ensureTooltip() {
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tooltip';
+        tooltipEl.textContent = TOOLTIP_TEXT;
+        document.body.appendChild(tooltipEl);
+      }
+      return tooltipEl;
+    }
+
+    function positionTooltipAt(clientX, clientY) {
+      const el = ensureTooltip();
+      const pad = 12;
+      const ttRect = el.getBoundingClientRect();
+      let top = clientY + 16 + window.scrollY; // below cursor
+      let left = clientX + 16 + window.scrollX; // to the right of cursor
+
+      // keep inside viewport horizontally
+      const maxLeft = window.scrollX + document.documentElement.clientWidth - ttRect.width - pad;
+      const maxTop = window.scrollY + document.documentElement.clientHeight - ttRect.height - pad;
+      left = Math.min(Math.max(window.scrollX + pad, left), maxLeft);
+      top  = Math.min(Math.max(window.scrollY + pad, top), maxTop);
+
+      el.style.top = top + 'px';
+      el.style.left = left + 'px';
+    }
+
+    function showTooltipFollow(e) {
+      positionTooltipAt(e.clientX, e.clientY);
+      if (!moveHandler) {
+        moveHandler = (ev) => positionTooltipAt(ev.clientX, ev.clientY);
+        copyEmailBtn.addEventListener('mousemove', moveHandler);
+      }
+    }
+
+    function hideTooltip() {
+      if (moveHandler) {
+        copyEmailBtn.removeEventListener('mousemove', moveHandler);
+        moveHandler = null;
+      }
+      if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+    }
+
+    copyEmailBtn.addEventListener('mouseenter', showTooltipFollow);
+    copyEmailBtn.addEventListener('mouseleave', hideTooltip);
+    window.addEventListener('scroll', hideTooltip);
+    window.addEventListener('resize', hideTooltip);
+
+    
+    // Theme toggle
+    const themeToggleBtn = document.getElementById('themeToggle');
+    function applyTheme(theme) {
+      const light = theme === 'light';
+      document.body.classList.toggle('theme-light', light);
+      themeToggleBtn.setAttribute('aria-pressed', light ? 'true' : 'false');
+      themeToggleBtn.textContent = light ? '☀️' : '🌙';
+      localStorage.setItem('gbl-theme', light ? 'light' : 'dark');
+    }
+    // Load saved theme
+    (function initTheme(){
+      const saved = localStorage.getItem('gbl-theme');
+      // Default to light if nothing saved
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+    })();
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.body.classList.contains('theme-light');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+
+    // Initial paint
+    render();
+    
+    render();
+  </script>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true" style="visibility: visible !important;"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

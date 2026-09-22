@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mike's P.L.P. (Pretty Little Paragraph Tool) — WebGL v40</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121833;
+      --muted: #8ea0c7;
+      --text: #e9eefc;
+      --chip: #0e1430;
+      --chip-border: rgba(255,255,255,0.07);
+      --btn: #1f2a55;
+      --btn-border: rgba(255,255,255,0.08);
+      --btn-text: #dfe7ff;
+      --btn-active: #7D2EFF;
+      --btn-active-border: #461F8C;
+      --tab-bg: #1b2350;
+      --tab-bg-active: #253172;
+      --tab-border: rgba(255,255,255,0.14);
+      --tab-border-active: rgba(255,255,255,0.24);
+      --panel-border: rgba(255,255,255,0.10);
+      --tooltip-bg: #0b1026;
+      --tooltip-border: rgba(255,255,255,0.12);
+      --danger: #d24f4f;
+      --warn: #d6a642;
+      --ok: #7D2EFF;
+      --card-bg: rgba(18, 24, 51, 0.75);
+      --input-bg: #0e1430;
+      --preview-bg: #ffffff;
+      --preview-text: #202124;
+      --tab-bg-inactive-dark: #151e46;
+      --tab-bg-inactive-light: #f2f4fb;
+      --tab-text-inactive-light: #4a5a86;
+      --control-row-height: 50px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1020, #0e1530 50%, #0b1020);
+      color: var(--text);
+    }
+
+    .app { display: grid; grid-template-columns: 360px minmax(0, 1fr); min-height: 100vh; }
+
+    aside {
+      background: rgba(18, 24, 51, 0.9);
+      border-right: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 18px 24px;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+    }
+
+    main { padding: 24px; padding-top: 90px; min-width: 0; }
+
+    h1 { font-weight: 800; font-size: 22px; margin: 0 0 6px; letter-spacing: .2px; }
+    h2 { font-size: 17px; margin: 0; }
+    h3 { font-size: 14px; margin: 0; color: var(--text); }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.35; margin: 0 0 18px; }
+
+    .tabs-wrap {
+      position: fixed;
+      top: 12px;
+      left: 384px;
+      z-index: 9998;
+      background: transparent;
+      display: flex;
+      gap: 8px;
+    }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; padding-left: 2px; }
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      appearance: none;
+      border: 1px solid var(--tab-border);
+      background: var(--tab-bg);
+      color: #dfe7ff;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1.1;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+      transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+      min-width: 220px;
+      height: 56px;
+      white-space: nowrap;
+    }
+    .tab:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .tab[aria-selected="true"] { background: var(--tab-bg-active); border-color: var(--tab-border-active); }
+    .tab[aria-selected="false"] { background: var(--tab-bg-inactive-dark); }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 8px; font-size: 12px; font-weight: 900; border-radius: 999px; margin-left: 2px; background: rgba(0,0,0,0.35); color: #ffffff; line-height: 1; }
+
+    .theme-toggle {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 9999;
+      background: var(--btn);
+      color: var(--btn-text);
+      border: 1px solid var(--btn-border);
+      border-radius: 999px;
+      padding: 10px 12px;
+      min-width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+    .theme-toggle:hover { filter: brightness(1.08); }
+
+    .field { margin-bottom: 14px; }
+    .field label, .check-row, .radio-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      line-height: 1.25;
+    }
+    .field .stack-label { display: block; }
+    .char-count {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .label-with-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      position: relative;
+    }
+    .info-tip {
+      position: static;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: var(--btn-text);
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: help;
+      flex: 0 0 auto;
+    }
+    .info-tip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      z-index: 10000;
+      left: 0;
+      top: calc(100% + 8px);
+      width: min(270px, calc(100vw - 48px));
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--tooltip-border);
+      background: var(--tooltip-bg);
+      color: #dfe7ff;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.35;
+      white-space: normal;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
+      transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+    }
+    .info-tip:hover::after,
+    .info-tip:focus-visible::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .info-tip:focus-visible {
+      outline: 2px solid var(--muted);
+      outline-offset: 2px;
+    }
+    .field .hint { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 6px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+    .row.two { grid-template-columns: 1fr 1fr; }
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    input[type="number"], input[type="text"], select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 138px;
+      line-height: 1.45;
+    }
+    #sourceText,
+    body.theme-light #sourceText {
+      background: #F7EFCD !important;
+      color: #000000 !important;
+      border-color: rgba(0,0,0,0.16) !important;
+    }
+    #sourceText::placeholder,
+    body.theme-light #sourceText::placeholder {
+      color: rgba(0,0,0,0.58);
+    }
+    input[type="range"] { width: 100%; }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--btn-active); }
+
+    .mini-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .advanced-reset-actions { margin: 14px 0 8px; }
+    .advanced-reset-actions .btn { width: 100%; }
+    .advanced-reset-actions .btn.brand-yellow {
+      background: #F8FB4C !important;
+      border-color: #E4E82E !important;
+      color: #1D1D1D !important;
+      box-shadow: none !important;
+    }
+    .advanced-reset-actions .btn.brand-yellow:hover { filter: brightness(1.03); }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--btn-border);
+      background: var(--btn);
+      color: var(--btn-text);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn.primary { background: var(--btn-active); border-color: var(--btn-active-border); color: #ffffff; }
+    .btn.ghost { background: transparent; }
+    .btn.slim { padding: 7px 13px; font-size: 12px; }
+
+    .advanced-settings {
+      margin: 16px 0 0;
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.035);
+      overflow: visible;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+      width: 100%;
+      outline: none;
+    }
+    .advanced-settings summary {
+      list-style: none;
+      min-height: var(--control-row-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+      background: rgba(255,255,255,0.035);
+      font-size: 14px;
+      font-weight: 850;
+      line-height: 1.2;
+      border-radius: 13px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .advanced-settings[open] summary {
+      border-radius: 13px 13px 0 0;
+    }
+    .advanced-settings summary::-webkit-details-marker { display: none; }
+    .advanced-settings summary::after {
+      content: "+";
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--btn);
+      border: 1px solid var(--btn-border);
+      color: var(--btn-text);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+    .advanced-settings[open] summary::after { content: "−"; }
+    .advanced-settings summary:focus,
+    .advanced-settings summary:focus-visible,
+    .advanced-settings:focus,
+    .advanced-settings:focus-visible {
+      outline: none;
+      box-shadow: none;
+    }
+    .advanced-body {
+      padding: 14px 14px 4px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+
+    .segmented {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      background: var(--input-bg);
+      overflow: hidden;
+    }
+    .segmented-thumb {
+      position: absolute;
+      z-index: 0;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc((100% - 8px) / 2);
+      border-radius: 10px;
+      border: 1px solid var(--btn-active-border);
+      background: var(--btn-active);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+      transform: translateX(0);
+      transition: transform 340ms cubic-bezier(.2, .9, .2, 1);
+      pointer-events: none;
+    }
+    .segmented.is-center .segmented-thumb { transform: translateX(100%); }
+    .segmented:not(.segmented-vertical) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      height: var(--control-row-height);
+    }
+    .segmented.segmented-vertical {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, var(--control-row-height));
+    }
+    .segmented.segmented-vertical .segmented-thumb {
+      left: 4px;
+      right: 4px;
+      top: 4px;
+      bottom: auto;
+      width: auto;
+      height: calc((100% - 8px) / 3);
+      transform: translateY(0);
+      transition: transform 340ms cubic-bezier(.2, .9, .2, 1);
+    }
+    .segmented.segmented-vertical.is-bottom .segmented-thumb { transform: translateY(100%); }
+    .segmented.segmented-vertical.is-top .segmented-thumb { transform: translateY(200%); }
+    .segmented label {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: stretch;
+      min-width: 0;
+      margin: 0;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .segmented label > span:not(.segmented-thumb) {
+      display: flex;
+      width: 100%;
+      min-height: calc(var(--control-row-height) - 10px);
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.15;
+      text-align: center;
+      white-space: nowrap;
+      transition: color 220ms ease;
+    }
+    .segmented input:checked + span { color: #ffffff; }
+    .segmented input:focus-visible + span {
+      outline: 2px solid var(--muted);
+      outline-offset: -2px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 0 0 16px;
+    }
+    .toolbar .left, .toolbar .right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .preview-meta-toolbar { justify-content: flex-start; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 16px; }
+    @media (min-width: 1280px) { .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+    .meta .kv {
+      background: var(--chip);
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--chip-border);
+      color: #cbd7ff;
+      line-height: 1.1;
+    }
+    .meta .kv.ok { background: rgba(125,46,255,0.18); border-color: rgba(125,46,255,0.5); color: #D1B5FF; }
+    .meta .kv.warn { background: rgba(214,166,66,0.16); border-color: rgba(214,166,66,0.45); color: #ffd990; }
+    .meta .kv.bad { background: rgba(183,46,46,0.18); border-color: rgba(183,46,46,0.55); color: #ffb3b3; }
+
+    .preview-wrap {
+      background: repeating-linear-gradient(45deg, #0f1636, #0f1636 12px, #10183b 12px, #10183b 24px);
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px dashed rgba(255,255,255,0.08);
+      overflow-x: auto;
+      min-height: 160px;
+    }
+    .preview-canvas {
+      box-sizing: content-box;
+      margin-left: auto;
+      margin-right: auto;
+      background: var(--preview-bg);
+      color: var(--preview-text);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      min-height: 96px;
+    }
+    .preview-canvas p { margin: 0 0 16px; }
+    .preview-canvas p:last-child { margin-bottom: 0; }
+
+    .line-map { display: grid; gap: 5px; }
+    .line-meter {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .line-meter span { display: block; height: 100%; background: var(--btn-active); border-radius: inherit; }
+
+    .output-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .output-box { min-height: 138px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+    .actions .left-actions, .actions .right-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    .empty-state {
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .combined-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .combined-output {
+      min-height: 520px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    footer { color: var(--muted); font-size: 12px; margin-top: 18px; line-height: 1.35; }
+    code { background: #0e1430; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); }
+
+    dialog { border: 0; border-radius: 16px; background: #0e1430; color: #e9eefc; width: min(920px, 92vw); padding: 0; }
+    dialog::backdrop { background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .modal-body { padding: 12px 16px 16px; }
+    pre { background: #0b1026; color: #e9eefc; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; line-height: 1.45; }
+    .close { background: transparent; color: #e9eefc; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 8px 10px; cursor: pointer; }
+
+    .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0; }
+
+    body.theme-light {
+      background: linear-gradient(180deg, #f5f7fc, #fbfcff 50%, #f5f7fc);
+      color: #0b1020;
+    }
+    body.theme-light aside { background: rgba(255, 255, 255, 0.92); border-right: 1px solid rgba(0,0,0,0.08); }
+    body.theme-light .sub, body.theme-light .field label, body.theme-light .check-row, body.theme-light .radio-row, body.theme-light .field .hint, body.theme-light footer { color: #5a6685; }
+    body.theme-light .char-count { color: #5a6685; }
+    body.theme-light input[type="number"], body.theme-light input[type="text"], body.theme-light select, body.theme-light textarea { background: #f5f7ff; color: #0b1020; border-color: rgba(0,0,0,0.08); }
+    body.theme-light .card, body.theme-light .empty-state { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.08); box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
+    body.theme-light .preview-wrap { background: repeating-linear-gradient(45deg, #f0f2fb, #f0f2fb 12px, #e8ecfb 12px, #e8ecfb 24px); border-color: rgba(0,0,0,0.08); }
+    body.theme-light .meta .kv { background: #f5f7ff; border-color: rgba(0,0,0,0.08); color: #20305a; }
+    body.theme-light .meta .kv.ok { background: rgba(125,46,255,0.12); border-color: rgba(125,46,255,0.38); color: #4A1FA0; }
+    body.theme-light .meta .kv.warn { background: rgba(214,166,66,0.12); border-color: rgba(214,166,66,0.38); color: #785200; }
+    body.theme-light .meta .kv.bad { background: rgba(183,46,46,0.1); border-color: rgba(183,46,46,0.35); color: #7a1e1e; }
+    body.theme-light .btn { background: #e9ecf8; color: #20305a; border-color: rgba(0,0,0,0.08); }
+    body.theme-light .btn.primary { background: var(--btn-active); color: #ffffff; border-color: var(--btn-active-border); }
+    body.theme-light .tab, body.theme-light .tab[aria-selected="true"], body.theme-light .tab[aria-selected="false"] { background: var(--btn) !important; color: var(--btn-text) !important; border-color: var(--btn-border) !important; }
+    body.theme-light .tab[aria-selected="false"] { background: var(--tab-bg-inactive-light) !important; color: var(--tab-text-inactive-light) !important; border-color: rgba(0,0,0,0.12) !important; box-shadow: 0 8px 18px rgba(0,0,0,0.10) !important; }
+    body.theme-light dialog, body.theme-light .modal-body { background: #ffffff; color: #0b1020; }
+    body.theme-light .modal-head { border-bottom: 1px solid rgba(0,0,0,0.12); }
+    body.theme-light pre { background: #ffffff; color: #0b1020; border: 1px solid rgba(0,0,0,0.12); }
+    body.theme-light code { background: #f5f7ff; color: #0b1020; border: 1px solid rgba(0,0,0,0.12); }
+    body.theme-light .close { color: #0b1020; border-color: rgba(0,0,0,0.12); background: #f5f7ff; }
+    body.theme-light h3 { color: #0b1020; }
+
+    body.theme-light .advanced-settings {
+      background: rgba(18,24,51,0.96);
+      border-color: rgba(255,255,255,0.10);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+    }
+    body.theme-light .advanced-settings summary {
+      background: rgba(18,24,51,0.98);
+      color: #e9eefc;
+    }
+    body.theme-light .advanced-body { border-top-color: rgba(255,255,255,0.10); }
+    body.theme-light .advanced-settings .field label,
+    body.theme-light .advanced-settings .check-row,
+    body.theme-light .advanced-settings .radio-row,
+    body.theme-light .advanced-settings .field .hint,
+    body.theme-light .advanced-settings footer {
+      color: #8ea0c7;
+    }
+    body.theme-light .advanced-settings input[type="number"],
+    body.theme-light .advanced-settings input[type="text"],
+    body.theme-light .advanced-settings select,
+    body.theme-light .advanced-settings textarea {
+      background: #0e1430;
+      color: #e9eefc;
+      border-color: rgba(255,255,255,0.10);
+    }
+    body.theme-light .advanced-settings .btn {
+      background: var(--btn);
+      color: var(--btn-text);
+      border-color: var(--btn-border);
+    }
+    body.theme-light .advanced-settings code {
+      background: #0e1430;
+      color: #dfe7ff;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    body.theme-light .segmented {
+      background: #f5f7ff;
+      border-color: rgba(0,0,0,0.08);
+    }
+    body.theme-light .segmented label { color: #5a6685; }
+    body.theme-light .segmented-thumb {
+      background: var(--btn-active);
+      border-color: var(--btn-active-border);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    }
+    body.theme-light .segmented input:checked + span { color: #ffffff; }
+    body.theme-light .info-tip {
+      border-color: rgba(0,0,0,0.14);
+      background: #eef1fb;
+      color: #20305a;
+    }
+    body.theme-light .info-tip::after {
+      background: #ffffff;
+      color: #20305a;
+      border-color: rgba(0,0,0,0.12);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+    }
+
+    body.theme-light .advanced-settings .segmented {
+      background: #0e1430;
+      border-color: rgba(255,255,255,0.08);
+    }
+    body.theme-light .advanced-settings .segmented label {
+      color: #8ea0c7;
+    }
+    body.theme-light .advanced-settings .info-tip {
+      border-color: rgba(255,255,255,0.16);
+      background: #0e1430;
+      color: #dfe7ff;
+    }
+    body.theme-light .advanced-settings .info-tip::after {
+      background: #0b1026;
+      color: #dfe7ff;
+      border-color: rgba(255,255,255,0.14);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    }
+
+
+    /* v26 Chrome polish: keep Advanced Settings rounded and reserve sidebar scrollbar space. */
+    aside {
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+    }
+    .advanced-settings,
+    .advanced-settings summary,
+    body.theme-light .advanced-settings,
+    body.theme-light .advanced-settings summary {
+      outline: none !important;
+    }
+    .advanced-settings summary,
+    body.theme-light .advanced-settings summary {
+      border-radius: 13px;
+    }
+    .advanced-settings[open] summary,
+    body.theme-light .advanced-settings[open] summary {
+      border-radius: 13px 13px 0 0;
+    }
+    .advanced-settings summary:focus,
+    .advanced-settings summary:focus-visible,
+    .advanced-settings:focus,
+    .advanced-settings:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* v27 selector polish: match main selectors to the Advanced Settings row height. */
+    .field > .segmented { margin-top: 4px; }
+
+    @media (max-width: 1040px) {
+      .app { grid-template-columns: 1fr; }
+      aside {
+        position: relative;
+        height: auto;
+        overflow: visible;
+        scrollbar-gutter: auto;
+      }
+      main { padding-top: 96px; }
+      .tabs-wrap { left: 12px; right: 72px; top: 12px; }
+      .tab { min-width: 0; flex: 1; }
+    }
+    @media (max-width: 620px) {
+      .tabs-wrap { top: 60px; }
+      .tabs { width: 100%; }
+      .tab { height: 46px; font-size: 14px; padding: 10px 12px; }
+      main { padding: 16px; padding-top: 128px; }
+      aside { padding: 16px; }
+      .controls-grid, .row.two { grid-template-columns: 1fr; }
+    }
+    /* ---- Panel body: ragged text (focus) + embedded 3D bars ---- */
+    .card-body { display: block; }
+    .card-body .preview-wrap { margin: 0; min-height: 200px; }
+
+    .output-with-bars {
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .output-with-bars .output-main { display: flex; min-width: 0; }
+    .output-with-bars .output-main .output-box { width: 100%; }
+    @media (max-width: 900px) {
+      .output-with-bars { grid-template-columns: 1fr; }
+    }
+
+    .bars-slot {
+      position: relative;
+      min-height: 200px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(120% 120% at 50% 0%, rgba(125,46,255,0.09), transparent 60%),
+        rgba(11,16,38,0.30);
+    }
+    body.theme-light .bars-slot {
+      border-color: rgba(0,0,0,0.08);
+      background:
+        radial-gradient(120% 120% at 50% 0%, rgba(125,46,255,0.12), transparent 60%),
+        rgba(245,247,255,0.6);
+    }
+    .bars-canvas {
+      position: absolute; inset: 0; z-index: 0;
+      width: 100%; height: 100%; display: block;
+      touch-action: none; cursor: default;
+    }
+    .bars-key {
+      position: absolute; left: 8px; bottom: 8px; z-index: 2;
+      display: flex; flex-wrap: wrap; gap: 4px 8px;
+      padding: 6px 8px; border-radius: 8px;
+      background: rgba(11,16,38,0.5);
+      border: 1px solid rgba(255,255,255,0.08);
+      -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+      font-size: 9.5px; font-weight: 700; letter-spacing: .01em;
+      color: #cbd7ff; pointer-events: none; line-height: 1;
+    }
+    .bars-key span { display: inline-flex; align-items: center; gap: 4px; }
+    .bars-key i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+    body.theme-light .bars-key { background: rgba(255,255,255,0.74); border-color: rgba(0,0,0,0.08); color: #20305a; }
+    .bars-tip {
+      position: fixed; z-index: 10000; pointer-events: none;
+      opacity: 0; transform: translate(-50%, -118%);
+      max-width: 240px; padding: 7px 9px;
+      border-radius: 9px;
+      background: #0b1026; border: 1px solid rgba(255,255,255,0.14);
+      color: #eef3ff; font-size: 11px; line-height: 1.32;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+      transition: opacity .12s ease;
+    }
+    .bars-tip.show { opacity: 1; }
+    .bars-tip .tl { font-weight: 700; margin-bottom: 2px; word-break: break-word; }
+    .bars-tip .tm { color: #a7b6e0; font-variant-numeric: tabular-nums; }
+    body.theme-light .bars-tip { background: #ffffff; color: #20305a; border-color: rgba(0,0,0,0.12); }
+    body.theme-light .bars-tip .tm { color: #5a6685; }
+
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="theme-light">
+  <button id="themeToggle" class="theme-toggle" aria-pressed="true" title="Toggle light/dark theme">☀️</button>
+
+  <div class="app">
+    <aside>
+      <h1>Mike's P.L.P. (Pretty Little Paragraph Tool)</h1>
+      <p class="sub">Perfectly ragged paragraphs</p>
+
+      <div class="field">
+        <label for="sourceText"><span>Source text</span><span id="sourceCharCount" class="char-count">0 chars</span></label>
+        <textarea id="sourceText" placeholder="Paste short email paragraphs here. Existing hard returns can be cleaned before ragging."></textarea>
+        <div class="mini-actions">
+          <button class="btn slim" id="normalizeBtn" type="button">Remove existing returns</button>
+          <button class="btn slim" id="sampleBtn" type="button">Load sample</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label><span>Rag Shape</span></label>
+        <div class="segmented segmented-vertical is-balanced" id="shapeSegmented" role="radiogroup" aria-label="Rag Shape">
+          <span class="segmented-thumb" aria-hidden="true"></span>
+          <label>
+            <input id="shapeBalanced" name="ragShape" type="radio" value="balanced" checked />
+            <span>Balanced</span>
+          </label>
+          <label>
+            <input id="shapeBottom" name="ragShape" type="radio" value="trapezoid" />
+            <span>Bottom weighted</span>
+          </label>
+          <label>
+            <input id="shapeTop" name="ragShape" type="radio" value="inverted" />
+            <span>Top weighted</span>
+          </label>
+        </div>
+        <input id="shape" type="hidden" value="balanced" />
+      </div>
+
+      <div class="field">
+        <label><span>Text alignment</span></label>
+        <div class="segmented is-center" id="alignmentSegmented" role="radiogroup" aria-label="Text alignment">
+          <span class="segmented-thumb" aria-hidden="true"></span>
+          <label>
+            <input id="alignLeft" name="textAlign" type="radio" value="left" />
+            <span>Left-aligned</span>
+          </label>
+          <label>
+            <input id="alignCenter" name="textAlign" type="radio" value="center" checked />
+            <span>Center-aligned</span>
+          </label>
+        </div>
+      </div>
+
+
+      <details class="advanced-settings" id="advancedSettings">
+        <summary><span>Advanced Settings</span></summary>
+        <div class="advanced-body">
+      <div class="field">
+        <label><span>Shape strength</span> <span id="shapeStrengthVal">22%</span></label>
+        <div class="row">
+          <input id="shapeStrength" type="range" min="0" max="45" step="1" value="22" />
+          <input id="shapeStrengthNum" type="number" min="0" max="45" step="1" value="22" />
+        </div>
+      </div>
+
+      <div class="field" style="display:none;">
+        <label><span>Use width up to</span> <span id="lineFillVal">100%</span></label>
+        <div class="row">
+          <input id="lineFill" type="range" min="70" max="100" step="1" value="100" />
+          <input id="lineFillNum" type="number" min="70" max="100" step="1" value="100" />
+        </div>
+        <div class="hint">Lower this when you want a more intentionally short text measure inside a wider module.</div>
+      </div>
+
+      <div class="controls-grid">
+        <div class="field">
+          <label><span>Font size</span> <span id="fontSizeVal">16px</span></label>
+          <div class="row">
+            <input id="fontSize" type="range" min="10" max="32" step="1" value="16" />
+            <input id="fontSizeNum" type="number" min="10" max="32" step="1" value="16" />
+          </div>
+        </div>
+        <div class="field">
+          <label><span>Line height</span> <span id="lineHeightVal">1.40</span></label>
+          <div class="row">
+            <input id="lineHeight" type="range" min="1.05" max="1.9" step="0.05" value="1.4" />
+            <input id="lineHeightNum" type="number" min="1.05" max="1.9" step="0.05" value="1.4" />
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fontFamily"><span>Preview font</span></label>
+        <select id="fontFamily">
+          <option value="Helvetica, Arial, sans-serif">Helvetica / Arial</option>
+          <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+          <option value="Inter, Arial, sans-serif">Inter fallback stack</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Verdana, Geneva, sans-serif">Verdana</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fontWeight"><span>Font weight</span></label>
+        <select id="fontWeight">
+          <option value="400">400 regular</option>
+          <option value="500">500 medium</option>
+          <option value="600">600 semibold</option>
+          <option value="700">700 bold</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="check-row"><span class="label-with-info">Preserve blank-lines <span class="info-tip" role="button" tabindex="0" aria-label="About preserve blank-lines" data-tooltip="Keeps blank lines as separate paragraphs instead of merging everything into one text block.">i</span></span><input id="preserveParagraphs" type="checkbox" checked /></label>
+        <label class="check-row"><span class="label-with-info">Widow guard <span class="info-tip" role="button" tabindex="0" aria-label="About widow guard" data-tooltip="Tries to prevent very short final lines by keeping the minimum final-line word count when possible.">i</span></span><input id="widowGuard" type="checkbox" checked /></label>
+        <label class="check-row"><span class="label-with-info">Smart break penalties <span class="info-tip" role="button" tabindex="0" aria-label="About smart break penalties" data-tooltip="Avoids weak line endings like and, of, to, or the when choosing hard returns.">i</span></span><input id="smartBreaks" type="checkbox" /></label>
+      </div>
+
+      <div class="field">
+        <label for="minLastWords"><span>Minimum final-line words</span></label>
+        <select id="minLastWords">
+          <option value="2" selected>2 words</option>
+          <option value="3">3 words</option>
+          <option value="4">4 words</option>
+        </select>
+        <div class="hint">Keeps the last line at or above this word count when the line can fit inside the character target.</div>
+      </div>
+
+      <div class="field">
+        <label for="widths"><span>Email text widths (actual px)</span></label>
+        <input id="widths" type="text" value="336, 446" />
+        <div class="mini-actions">
+          <button class="btn slim" id="resetWidthsBtn" type="button">Reset to Mobile 336 / Desktop 446</button>
+        </div>
+        <div class="hint">Mobile is <code>336px</code>; Desktop is <code>446px</code>. These are actual CSS/email widths, equivalent to 892px and 672px in a @2x Figma file.</div>
+      </div>
+
+      <div class="field">
+        <label for="charTargets"><span>Line targets (characters)</span></label>
+        <input id="charTargets" type="text" value="336:40, 446:58" />
+        <div class="mini-actions">
+          <button class="btn slim" id="resetCharTargetsBtn" type="button">Reset to Mobile=40 / Desktop=58</button>
+        </div>
+        <div class="hint">Format: <code>width:characters</code>. Defaults: <code>336:40</code> for Mobile and <code>446:58</code> for Desktop.</div>
+      </div>
+
+
+      <footer>
+        The rag engine uses character-count targets, then inserts hard returns. The default email assumptions are <code>Mobile (336px) = 40 chars</code>, <code>Desktop (446px) = 58 chars</code>, and 16px Helvetica. The widths are actual CSS/email pixels; @2x Figma widths would be 892px and 672px. The HTML copy option uses <code>&lt;br&gt;</code> tags for email snippets.
+      </footer>
+      <div class="mini-actions advanced-reset-actions">
+        <button class="btn slim brand-yellow" id="resetAdvancedBtn" type="button">Reset advanced settings</button>
+      </div>
+
+        </div>
+      </details>
+    </aside>
+
+    <main>
+      <div class="tabs-wrap">
+        <div class="tabs" role="tablist" aria-label="Mike's Pretty Little Paragraphs tabs">
+          <button class="tab" id="tab-preview" role="tab" aria-selected="true" aria-controls="panel-preview">Rag Preview <span id="previewBadge" class="badge">0</span></button>
+          <button class="tab" id="tab-combined" role="tab" aria-selected="false" aria-controls="panel-combined">Combined Output</button>
+        </div>
+      </div>
+
+      <section id="panel-preview" role="tabpanel" aria-labelledby="tab-preview">
+        <div class="toolbar preview-meta-toolbar">
+          <div class="right meta" id="globalMeta" aria-live="polite"></div>
+        </div>
+        <div id="emptyState" class="empty-state">Paste copy into the source field. Each width gets its own panel showing the ragged text with a 3D shape view beside it, or load the sample to see the rag engine working.</div>
+        <div class="cards-grid" id="cards" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-combined" role="tabpanel" aria-labelledby="tab-combined" class="hidden">
+        <div class="toolbar">
+          <div class="left">
+            <button class="btn primary" id="copyCombinedBtn" type="button">Copy combined text</button>
+            <button class="btn" id="copyCombinedHtmlBtn" type="button">Copy combined HTML</button>
+          </div>
+          <div class="right meta"><div class="kv">Each width is labeled for QA</div></div>
+        </div>
+        <div class="combined-wrap">
+          <textarea id="combinedOutput" class="combined-output" readonly></textarea>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="cardTemplate">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 data-title></h2>
+          <div class="sub" data-sub style="margin:4px 0 0;"></div>
+        </div>
+        <div class="meta" data-meta></div>
+      </div>
+      <div class="card-body">
+        <div class="preview-wrap">
+          <div class="preview-canvas" data-preview></div>
+        </div>
+      </div>
+      <div class="output-grid output-with-bars">
+        <div class="output-main">
+          <label class="sr-only" data-output-label>Hard-return text</label>
+          <textarea class="output-box" readonly data-output></textarea>
+        </div>
+        <div class="bars-slot" data-bars-slot>
+          <div class="bars-key" aria-hidden="true">
+            <span><i style="background:#7D2EFF"></i>Good fill</span>
+            <span><i style="background:#d6a642"></i>Short</span>
+            <span><i style="background:#d24f4f"></i>Over target</span>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn" type="button" data-copy-text>Copy text</button>
+          <button class="btn" type="button" data-copy-html>Copy HTML</button>
+        </div>
+        <div class="right-actions">
+          <button class="btn ghost" type="button" data-view-html>View HTML</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <dialog id="modal">
+    <div class="modal-head">
+      <strong>HTML to copy</strong>
+      <button class="close" onclick="document.getElementById('modal').close()">Close</button>
+    </div>
+    <div class="modal-body">
+      <pre><code id="code"></code></pre>
+    </div>
+  </dialog>
+
+  <script>
+    const stateKey = 'mikes-pretty-little-paragraphs-v27';
+    const defaultWidths = '336, 446';
+    const defaultCharTargets = '336:40, 446:58';
+    const defaultShapeStrength = '22';   // Shape Strength always starts here on load
+    const SAMPLE_TEXTS = [
+      'Master the markets using Yahoo Finance for real-time tickers, expert stock analysis, and breaking news. Build wealth with the ultimate tool.',
+      'Clear the clutter and experience Yahoo Mail, an email app that keeps you organized with massive storage, smart filters, and fast navigation.',
+      'Draft your ultimate dream team and dominate your friends. Claim your championship glory on Yahoo Fantasy, the best place to play today.',
+      'Get answers instantly by using Yahoo Search to discover exactly what you need with fast, accurate web results and trending daily topics.'
+    ];
+    let lastSampleIndex = -1;
+
+    const els = {
+      sourceText: document.getElementById('sourceText'),
+      sourceCharCount: document.getElementById('sourceCharCount'),
+      widths: document.getElementById('widths'),
+      charTargets: document.getElementById('charTargets'),
+      shape: document.getElementById('shape'),
+      shapeSegmented: document.getElementById('shapeSegmented'),
+      shapeBalanced: document.getElementById('shapeBalanced'),
+      shapeBottom: document.getElementById('shapeBottom'),
+      shapeTop: document.getElementById('shapeTop'),
+      alignCenter: document.getElementById('alignCenter'),
+      alignLeft: document.getElementById('alignLeft'),
+      alignmentSegmented: document.getElementById('alignmentSegmented'),
+      shapeStrength: document.getElementById('shapeStrength'),
+      shapeStrengthNum: document.getElementById('shapeStrengthNum'),
+      shapeStrengthVal: document.getElementById('shapeStrengthVal'),
+      lineFill: document.getElementById('lineFill'),
+      lineFillNum: document.getElementById('lineFillNum'),
+      lineFillVal: document.getElementById('lineFillVal'),
+      fontSize: document.getElementById('fontSize'),
+      fontSizeNum: document.getElementById('fontSizeNum'),
+      fontSizeVal: document.getElementById('fontSizeVal'),
+      lineHeight: document.getElementById('lineHeight'),
+      lineHeightNum: document.getElementById('lineHeightNum'),
+      lineHeightVal: document.getElementById('lineHeightVal'),
+      fontFamily: document.getElementById('fontFamily'),
+      fontWeight: document.getElementById('fontWeight'),
+      preserveParagraphs: document.getElementById('preserveParagraphs'),
+      widowGuard: document.getElementById('widowGuard'),
+      smartBreaks: document.getElementById('smartBreaks'),
+      minLastWords: document.getElementById('minLastWords'),
+      cards: document.getElementById('cards'),
+      emptyState: document.getElementById('emptyState'),
+      cardTemplate: document.getElementById('cardTemplate'),
+      globalMeta: document.getElementById('globalMeta'),
+      previewBadge: document.getElementById('previewBadge'),
+      combinedOutput: document.getElementById('combinedOutput'),
+      tabPreview: document.getElementById('tab-preview'),
+      tabCombined: document.getElementById('tab-combined'),
+      panelPreview: document.getElementById('panel-preview'),
+      panelCombined: document.getElementById('panel-combined'),
+      themeToggle: document.getElementById('themeToggle'),
+      modal: document.getElementById('modal'),
+      code: document.getElementById('code')
+    };
+
+    const buttons = {
+      normalize: document.getElementById('normalizeBtn'),
+      sample: document.getElementById('sampleBtn'),
+      resetWidths: document.getElementById('resetWidthsBtn'),
+      resetCharTargets: document.getElementById('resetCharTargetsBtn'),
+      resetAdvanced: document.getElementById('resetAdvancedBtn'),
+      copyCombined: document.getElementById('copyCombinedBtn'),
+      copyCombinedHtml: document.getElementById('copyCombinedHtmlBtn')
+    };
+
+    let lastResults = [];
+    let towerViews = [];
+    let glLoopStarted = false;
+    let glLast = performance.now();
+    let glMouseX = null, glMouseY = null, glSourceFocused = false, glGlobalsInit = false;
+    let renderTimer = null;
+    const BAD_ENDINGS = new Set(['a','an','and','as','at','but','by','for','from','in','into','of','on','or','the','to','vs','with','without']);
+
+    function storageGet(key, fallback) {
+      try {
+        const value = localStorage.getItem(key);
+        return value == null ? fallback : value;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function storageSet(key, value) {
+      try { localStorage.setItem(key, value); } catch (e) {}
+    }
+
+    function switchTab(which) {
+      const preview = which === 'preview';
+      els.tabPreview.setAttribute('aria-selected', preview ? 'true' : 'false');
+      els.tabCombined.setAttribute('aria-selected', preview ? 'false' : 'true');
+      els.panelPreview.classList.toggle('hidden', !preview);
+      els.panelCombined.classList.toggle('hidden', preview);
+      if (!preview) updateCombinedOutput();
+    }
+
+    els.tabPreview.addEventListener('click', () => switchTab('preview'));
+    els.tabCombined.addEventListener('click', () => switchTab('combined'));
+
+    function linkRange(rangeEl, numEl, valueEl, suffix, decimals) {
+      const sync = (from, to) => {
+        to.value = from.value;
+        const n = Number(from.value);
+        valueEl.textContent = (decimals ? n.toFixed(decimals) : Math.round(n)) + suffix;
+        scheduleRender();
+      };
+      rangeEl.addEventListener('input', () => sync(rangeEl, numEl));
+      numEl.addEventListener('input', () => sync(numEl, rangeEl));
+    }
+
+    linkRange(els.shapeStrength, els.shapeStrengthNum, els.shapeStrengthVal, '%', 0);
+    linkRange(els.lineFill, els.lineFillNum, els.lineFillVal, '%', 0);
+    linkRange(els.fontSize, els.fontSizeNum, els.fontSizeVal, 'px', 0);
+    linkRange(els.lineHeight, els.lineHeightNum, els.lineHeightVal, '', 2);
+
+    ['sourceText','widths','charTargets','fontFamily','fontWeight','preserveParagraphs','widowGuard','smartBreaks','minLastWords'].forEach(id => {
+      const el = els[id];
+      el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', scheduleRender);
+    });
+
+    [els.shapeBalanced, els.shapeBottom, els.shapeTop].forEach(el => {
+      el.addEventListener('change', () => {
+        if (el.checked) {
+          els.shape.value = el.value;
+          updateShapeToggleClass();
+          scheduleRender();
+        }
+      });
+    });
+
+    [els.alignCenter, els.alignLeft].forEach(el => {
+      el.addEventListener('change', () => {
+        updateAlignmentToggleClass();
+        scheduleRender();
+      });
+    });
+
+    document.querySelectorAll('.info-tip').forEach(tip => {
+      tip.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    });
+
+    els.sourceText.addEventListener('input', updateSourceCharCount);
+
+    buttons.normalize.addEventListener('click', () => {
+      const cleaned = cleanParagraphs(els.sourceText.value).join('\n\n');
+      els.sourceText.value = cleaned;
+      saveState();
+      render();
+    });
+
+    function getRandomSampleText() {
+      const samples = SAMPLE_TEXTS.map((text, index) => ({ text, index }));
+      const current = String(els.sourceText.value || '').trim();
+      let pool = samples.filter(item => item.text !== current);
+      if (!pool.length) pool = samples;
+      if (pool.length > 1) {
+        const notLast = pool.filter(item => item.index !== lastSampleIndex);
+        if (notLast.length) pool = notLast;
+      }
+      const picked = pool[Math.floor(Math.random() * pool.length)] || samples[0];
+      lastSampleIndex = picked.index;
+      return picked.text;
+    }
+
+    buttons.sample.addEventListener('click', () => {
+      els.sourceText.value = getRandomSampleText();
+      saveState();
+      render();
+    });
+    buttons.resetWidths.addEventListener('click', () => {
+      els.widths.value = defaultWidths;
+      saveState();
+      render();
+    });
+    buttons.resetCharTargets.addEventListener('click', () => {
+      els.charTargets.value = defaultCharTargets;
+      saveState();
+      render();
+    });
+    buttons.resetAdvanced.addEventListener('click', resetAdvancedSettings);
+
+    function resetAdvancedSettings() {
+      els.shapeStrength.value = '22';
+      els.shapeStrengthNum.value = '22';
+      els.shapeStrengthVal.textContent = '22%';
+      els.lineFill.value = '100';
+      els.lineFillNum.value = '100';
+      els.lineFillVal.textContent = '100%';
+      els.fontSize.value = '16';
+      els.fontSizeNum.value = '16';
+      els.fontSizeVal.textContent = '16px';
+      els.lineHeight.value = '1.4';
+      els.lineHeightNum.value = '1.4';
+      els.lineHeightVal.textContent = '1.40';
+      els.fontFamily.value = 'Helvetica, Arial, sans-serif';
+      els.fontWeight.value = '400';
+      els.preserveParagraphs.checked = true;
+      els.widowGuard.checked = true;
+      els.smartBreaks.checked = false;
+      els.minLastWords.value = '2';
+      els.widths.value = defaultWidths;
+      els.charTargets.value = defaultCharTargets;
+      saveState();
+      render();
+    }
+
+    function sanitizeSourceReturns() {
+      const cleaned = stripSpacesAfterReturns(els.sourceText.value);
+      if (cleaned !== els.sourceText.value) {
+        els.sourceText.value = cleaned;
+        saveState();
+        scheduleRender();
+      }
+    }
+
+    els.sourceText.addEventListener('paste', () => setTimeout(sanitizeSourceReturns, 0));
+    els.sourceText.addEventListener('blur', sanitizeSourceReturns);
+
+    buttons.copyCombined.addEventListener('click', () => copyString(buildAllText(), buttons.copyCombined, 'Copied combined text'));
+    buttons.copyCombinedHtml.addEventListener('click', () => copyString(buildAllHtml(), buttons.copyCombinedHtml, 'Copied combined HTML'));
+
+    function normalizeShapeValue(value) {
+      return value === 'trapezoid' || value === 'inverted' ? value : 'balanced';
+    }
+
+    function setShapeFromValue(value) {
+      const shape = normalizeShapeValue(value);
+      els.shape.value = shape;
+      els.shapeBalanced.checked = shape === 'balanced';
+      els.shapeBottom.checked = shape === 'trapezoid';
+      els.shapeTop.checked = shape === 'inverted';
+      updateShapeToggleClass();
+    }
+
+    function updateShapeToggleClass() {
+      if (!els.shapeSegmented) return;
+      const shape = normalizeShapeValue(els.shape.value);
+      els.shapeSegmented.classList.toggle('is-balanced', shape === 'balanced');
+      els.shapeSegmented.classList.toggle('is-bottom', shape === 'trapezoid');
+      els.shapeSegmented.classList.toggle('is-top', shape === 'inverted');
+    }
+
+    function updateAlignmentToggleClass() {
+      if (!els.alignmentSegmented) return;
+      const isLeft = els.alignLeft.checked;
+      els.alignmentSegmented.classList.toggle('is-left', isLeft);
+      els.alignmentSegmented.classList.toggle('is-center', !isLeft);
+    }
+
+    function updateSourceCharCount() {
+      const count = String(els.sourceText.value || '').length;
+      els.sourceCharCount.textContent = count + ' char' + (count === 1 ? '' : 's');
+    }
+
+    function scheduleRender() {
+      clearTimeout(renderTimer);
+      renderTimer = setTimeout(render, 120);
+    }
+
+    function stripSpacesAfterReturns(value) {
+      return String(value || '').replace(/\r\n?/g, '\n').replace(/\n[ \t\u00A0]+/g, '\n');
+    }
+
+    function cleanParagraphs(raw) {
+      const text = stripSpacesAfterReturns(raw).trim();
+      if (!text) return [];
+      if (els.preserveParagraphs.checked) {
+        return text
+          .split(/\n\s*\n+/)
+          .map(p => p.replace(/[\t ]+/g, ' ').replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim())
+          .filter(Boolean);
+      }
+      return [text.replace(/\s+/g, ' ').trim()].filter(Boolean);
+    }
+
+    function parseWidths(value) {
+      const nums = (value || '')
+        .split(/[^0-9.]+/)
+        .map(v => Math.round(Number(v)))
+        .filter(v => Number.isFinite(v) && v >= 160 && v <= 1600);
+      const seen = new Set();
+      const unique = [];
+      nums.forEach(n => { if (!seen.has(n)) { seen.add(n); unique.push(n); } });
+      if (!unique.length) return [336, 446];
+      const rank = (w) => w === 336 ? 0 : w === 446 ? 1 : 2 + unique.indexOf(w);
+      return unique.slice().sort((a, b) => rank(a) - rank(b));
+    }
+
+    function parseCharTargets(value) {
+      const parsed = {};
+      const re = /(\d{3,4})\s*[:=]\s*(\d{1,3})/g;
+      let match;
+      while ((match = re.exec(String(value || ''))) !== null) {
+        const width = Math.round(Number(match[1]));
+        const chars = Math.round(Number(match[2]));
+        if (Number.isFinite(width) && Number.isFinite(chars) && width >= 160 && width <= 1600 && chars >= 10 && chars <= 140) {
+          parsed[width] = chars;
+        }
+      }
+      if (!Object.keys(parsed).length) {
+        parsed[336] = 40;
+        parsed[446] = 58;
+      }
+      return parsed;
+    }
+
+    function targetCharsForWidth(width, opts) {
+      const targets = opts.charTargets || {};
+      if (targets[width]) return targets[width];
+      const entries = Object.keys(targets)
+        .map(k => ({ width: Number(k), chars: Number(targets[k]) }))
+        .filter(item => Number.isFinite(item.width) && Number.isFinite(item.chars));
+      if (entries.length) {
+        entries.sort((a, b) => Math.abs(a.width - width) - Math.abs(b.width - width));
+        return entries[0].chars;
+      }
+      return width <= 390 ? 40 : 58;
+    }
+
+    function widthLabel(width) {
+      if (width === 446) return 'Desktop';
+      if (width === 336) return 'Mobile';
+      return 'Alt';
+    }
+
+    function widthDisplayName(width) {
+      const label = widthLabel(width);
+      return label === 'Alt' ? width + 'px' : label + ' (' + width + 'px)';
+    }
+
+    function formatCharTargets(widths, opts) {
+      return widths.map(w => widthDisplayName(w) + '=' + targetCharsForWidth(w, opts) + ' chars').join(' / ');
+    }
+
+    function getOptions() {
+      const fontSize = Number(els.fontSize.value) || 16;
+      const lineHeight = Number(els.lineHeight.value) || 1.4;
+      const fontWeight = String(els.fontWeight.value || '400');
+      const fontFamily = els.fontFamily.value || 'Helvetica, Arial, sans-serif';
+      const textAlign = els.alignLeft.checked ? 'left' : 'center';
+      return {
+        shape: els.shape.value,
+        textAlign,
+        strength: Math.max(0, Math.min(0.45, Number(els.shapeStrength.value) / 100)),
+        lineFill: Math.max(0.7, Math.min(1, Number(els.lineFill.value) / 100)),
+        charTargets: parseCharTargets(els.charTargets.value),
+        fontSize,
+        lineHeight,
+        fontWeight,
+        fontFamily,
+        fontCss: fontWeight + ' ' + fontSize + 'px ' + fontFamily,
+        widowGuard: els.widowGuard.checked,
+        smartBreaks: els.smartBreaks.checked,
+        minLastWords: Number(els.minLastWords.value) || 2
+      };
+    }
+
+    function measureContext(fontCss) {
+      const canvas = measureContext.canvas || (measureContext.canvas = document.createElement('canvas'));
+      const ctx = canvas.getContext('2d');
+      ctx.font = fontCss;
+      return ctx;
+    }
+
+    function shapeFactor(shape, strength, index, total) {
+      if (shape === 'balanced' || total <= 1 || strength <= 0) return 1;
+      const t = index / (total - 1);
+      if (shape === 'trapezoid') return 1 - strength / 2 + strength * t;
+      if (shape === 'inverted') return 1 + strength / 2 - strength * t;
+      return 1;
+    }
+
+    function computeRag(paragraph, widthPx, opts) {
+      const words = paragraph.match(/\S+/g) || [];
+      const n = words.length;
+      const baseTarget = Math.max(10, targetCharsForWidth(widthPx, opts));
+      if (n === 0) return { lines: [], metrics: [], score: 0, warnings: [], targetChars: baseTarget };
+      if (n === 1) {
+        const chars = words[0].length;
+        return {
+          lines: [words[0]],
+          metrics: [{ chars, words: 1, target: baseTarget }],
+          score: 0,
+          warnings: chars > baseTarget ? ['Single word exceeds the character target'] : [],
+          targetChars: baseTarget
+        };
+      }
+
+      const wordChars = words.map(word => word.length);
+      const prefix = [0];
+      for (let i = 0; i < n; i++) prefix.push(prefix[i] + wordChars[i]);
+      const hardLimit = baseTarget;
+
+      function charsOf(i, j) {
+        if (j <= i) return 0;
+        return prefix[j] - prefix[i] + (j - i - 1);
+      }
+
+      function targetProfile(totalLines) {
+        const usableChars = Math.max(1, charsOf(0, n) - Math.max(0, totalLines - 1));
+        const avg = usableChars / totalLines;
+        return Array.from({ length: totalLines }, (_, k) => {
+          const shaped = avg * shapeFactor(opts.shape, opts.strength, k, totalLines);
+          return Math.max(6, Math.min(baseTarget, shaped));
+        });
+      }
+
+      function greedyBreaks() {
+        const breaks = [];
+        let start = 0;
+        while (start < n) {
+          let end = start + 1;
+          while (end <= n && charsOf(start, end) <= hardLimit) end++;
+          end = Math.max(start + 1, end - 1);
+          breaks.push([start, end]);
+          start = end;
+        }
+        return breaks;
+      }
+
+      function canApplyFinalWordMinimum(totalLines) {
+        const minWords = Math.max(1, Math.round(opts.minLastWords || 2));
+        const enoughWords = n >= (totalLines - 1) + minWords;
+        const minimumLastStart = Math.max(0, n - minWords);
+        const minimumLastLineFits = charsOf(minimumLastStart, n) <= hardLimit;
+        return opts.widowGuard && totalLines > 1 && enoughWords && minimumLastLineFits;
+      }
+
+      function repairFinalLineRanges(originalRanges) {
+        const ranges = originalRanges.map(range => [range[0], range[1]]);
+        if (!opts.widowGuard || ranges.length <= 1) return { ranges, repaired: false };
+        const minWords = Math.max(1, Math.round(opts.minLastWords || 2));
+        let repaired = false;
+        let guard = 0;
+
+        while (ranges.length > 1 && guard++ < n) {
+          const lastIndex = ranges.length - 1;
+          const prevIndex = lastIndex - 1;
+          const last = ranges[lastIndex];
+          const prev = ranges[prevIndex];
+          const lastWords = last[1] - last[0];
+          const prevWords = prev[1] - prev[0];
+          if (lastWords >= minWords) break;
+
+          const merged = [prev[0], last[1]];
+          if (charsOf(merged[0], merged[1]) <= hardLimit && prevWords + lastWords >= minWords) {
+            ranges.splice(prevIndex, 2, merged);
+            repaired = true;
+            continue;
+          }
+
+          if (prevWords <= 1) break;
+          const nextPrev = [prev[0], prev[1] - 1];
+          const nextLast = [last[0] - 1, last[1]];
+          if (nextLast[0] < 0 || charsOf(nextLast[0], nextLast[1]) > hardLimit) break;
+          ranges[prevIndex] = nextPrev;
+          ranges[lastIndex] = nextLast;
+          repaired = true;
+        }
+        return { ranges, repaired };
+      }
+
+      const greedy = greedyBreaks();
+      const minLines = greedy.length;
+      const maxLines = Math.min(n, Math.max(minLines, Math.min(minLines + 8, Math.ceil(n / 2))));
+      let best = null;
+
+      function lineCost(i, j, lineIndex, totalLines, target) {
+        const chars = charsOf(i, j);
+        const wordCount = j - i;
+        const overflow = Math.max(0, chars - hardLimit);
+        let cost = 0;
+        if (overflow > 0) cost += 100000 + overflow * overflow * 500;
+
+        const diff = (chars - target) / Math.max(1, baseTarget);
+        cost += diff * diff * 1000;
+
+        const isLast = lineIndex === totalLines - 1;
+        if (wordCount === 1 && n > 1) cost += isLast ? 4000 : 400;
+
+        if (opts.widowGuard && isLast && totalLines > 1) {
+          const minWords = Math.max(1, Math.round(opts.minLastWords || 2));
+          const feasible = canApplyFinalWordMinimum(totalLines);
+          if (feasible && wordCount < minWords) return Infinity;
+          if (wordCount < minWords) cost += 25000;
+          if (chars < Math.min(target, baseTarget) * 0.35) cost += 1200;
+          const alnumChars = words.slice(i, j).join('').replace(/[^A-Za-z0-9]/g, '').length;
+          if (alnumChars < 8 && n > 3) cost += 700;
+        }
+
+        if (opts.smartBreaks && !isLast) {
+          const last = words[j - 1].toLowerCase().replace(/[^a-z0-9']/g, '');
+          if (BAD_ENDINGS.has(last)) cost += 65;
+          if (/^[a-z]$/i.test(last)) cost += 45;
+        }
+        return cost;
+      }
+
+      for (let L = minLines; L <= maxLines; L++) {
+        const targets = targetProfile(L);
+        const dp = Array.from({ length: L + 1 }, () => Array(n + 1).fill(Infinity));
+        const prev = Array.from({ length: L + 1 }, () => Array(n + 1).fill(-1));
+        dp[0][0] = 0;
+
+        for (let k = 1; k <= L; k++) {
+          for (let j = k; j <= n; j++) {
+            let bestCost = Infinity;
+            let bestI = -1;
+            for (let i = j - 1; i >= k - 1; i--) {
+              const lineChars = charsOf(i, j);
+              if (lineChars > hardLimit && i < j - 1) break;
+              if (!Number.isFinite(dp[k - 1][i])) continue;
+              const lineScore = lineCost(i, j, k - 1, L, targets[k - 1]);
+              if (!Number.isFinite(lineScore)) continue;
+              const c = dp[k - 1][i] + lineScore;
+              if (c < bestCost) { bestCost = c; bestI = i; }
+            }
+            dp[k][j] = bestCost;
+            prev[k][j] = bestI;
+          }
+        }
+
+        if (Number.isFinite(dp[L][n])) {
+          const wordsPerLine = n / L;
+          const lineCountPenalty = Math.pow(L - minLines, 2) * 18 + (wordsPerLine < 2 ? 280 : 0);
+          const totalCost = dp[L][n] + lineCountPenalty;
+          if (!best || totalCost < best.score) {
+            const ranges = [];
+            let j = n;
+            for (let k = L; k >= 1; k--) {
+              const i = prev[k][j];
+              ranges.unshift([i, j]);
+              j = i;
+            }
+            best = { ranges, score: totalCost };
+          }
+        }
+      }
+
+      const repair = repairFinalLineRanges(best ? best.ranges : greedy);
+      const ranges = repair.ranges;
+      const finalTargets = targetProfile(ranges.length);
+      const lines = ranges.map(([i, j]) => words.slice(i, j).join(' '));
+      const metrics = ranges.map(([i, j], idx) => ({ chars: charsOf(i, j), words: j - i, target: finalTargets[idx] }));
+      const warnings = [];
+      const last = metrics[metrics.length - 1];
+      if (opts.widowGuard && metrics.length > 1 && last && last.words < opts.minLastWords) warnings.push('Final line may still be a widow');
+      if (metrics.some(m => m.chars > baseTarget)) warnings.push('A long word or line exceeds the character target');
+      return { lines, metrics, score: best ? best.score : 0, warnings, targetChars: baseTarget };
+    }
+
+    function resultForWidth(width, paragraphs, opts) {
+      const targetChars = targetCharsForWidth(width, opts);
+      const ragged = paragraphs.map(p => computeRag(p, width, opts));
+      const text = stripSpacesAfterReturns(ragged.map(r => r.lines.join('\n')).join('\n\n'));
+      const html = buildHtmlSnippet(ragged, opts, width);
+      const allMetrics = ragged.flatMap(r => r.metrics);
+      const lineChars = allMetrics.map(m => m.chars);
+      const maxLine = lineChars.length ? Math.max(...lineChars) : 0;
+      const minLine = lineChars.length ? Math.min(...lineChars) : 0;
+      const avgLine = lineChars.length ? lineChars.reduce((a,b) => a + b, 0) / lineChars.length : 0;
+      const warnings = ragged.flatMap(r => r.warnings);
+      const lastMetrics = ragged.map(r => r.metrics[r.metrics.length - 1]).filter(Boolean);
+      const finalWordCounts = lastMetrics.map(m => m.words);
+      const minFinalWordsFound = finalWordCounts.length ? Math.min(...finalWordCounts) : 0;
+      const widowOk = lastMetrics.every(m => m.words >= opts.minLastWords) || !opts.widowGuard;
+      return { width, targetChars, ragged, text, html, maxLine, minLine, avgLine, lineCount: allMetrics.length, warnings, widowOk, minFinalWordsFound };
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function buildHtmlSnippet(ragged, opts, widthPx) {
+      const align = opts.textAlign === 'left' ? 'left' : 'center';
+      const margin = '0 auto 16px auto';
+      const pStyle = [
+        'margin:' + margin,
+        'width:100%',
+        'max-width:' + widthPx + 'px',
+        'font-family:' + opts.fontFamily,
+        'font-size:' + opts.fontSize + 'px',
+        'line-height:' + opts.lineHeight,
+        'font-weight:' + opts.fontWeight,
+        'color:#202124',
+        'text-align:' + align
+      ].join('; ');
+      return ragged.map(r => '<p style="' + pStyle + ';">' + r.lines.map(escapeHtml).join('<br>\n') + '</p>').join('\n\n');
+    }
+
+    function buildAllText() {
+      if (!lastResults.length) return '';
+      return stripSpacesAfterReturns(lastResults.map(r => '--- ' + widthDisplayName(r.width) + ' / ' + r.targetChars + ' chars ---\n' + r.text).join('\n\n'));
+    }
+
+    function buildAllHtml() {
+      if (!lastResults.length) return '';
+      return lastResults.map(r => '<!-- ' + widthDisplayName(r.width) + ' / ' + r.targetChars + ' chars -->\n' + r.html).join('\n\n');
+    }
+
+    function updateCombinedOutput() {
+      els.combinedOutput.value = buildAllText();
+    }
+
+    function render() {
+      clearTimeout(renderTimer);
+      updateSourceCharCount();
+      saveState();
+      const paragraphs = cleanParagraphs(els.sourceText.value);
+      const widths = parseWidths(els.widths.value);
+      const opts = getOptions();
+      lastResults = paragraphs.length ? widths.map(w => resultForWidth(w, paragraphs, opts)) : [];
+      els.previewBadge.textContent = String(lastResults.length);
+      els.cards.innerHTML = '';
+      els.emptyState.classList.toggle('hidden', paragraphs.length > 0);
+      renderGlobalMeta(paragraphs, widths, opts);
+      lastResults.forEach(r => renderCard(r, opts));
+      updateCombinedOutput();
+      mountTowerViews(lastResults, opts);
+    }
+
+    function renderGlobalMeta(paragraphs, widths, opts) {
+      els.globalMeta.innerHTML = '';
+      const chips = [];
+      if (paragraphs.length) {
+        const wordCount = paragraphs.join(' ').match(/\S+/g)?.length || 0;
+        chips.push({ text: paragraphs.length + ' paragraph' + (paragraphs.length === 1 ? '' : 's') });
+        chips.push({ text: wordCount + ' words' });
+      }
+      chips.push({ text: widths.length + ' width' + (widths.length === 1 ? '' : 's') });
+      chips.push({ text: formatCharTargets(widths, opts) });
+      chips.push({ text: opts.shape === 'balanced' ? 'Balanced' : opts.shape === 'trapezoid' ? 'Bottom weighted' : 'Top weighted' });
+      chips.push({ text: (opts.textAlign === 'left' ? 'Left-aligned' : 'Center-aligned') });
+      chips.push({ text: 'Final line min: ' + opts.minLastWords + ' words' });
+      chips.forEach(c => {
+        const chip = document.createElement('div');
+        chip.className = 'kv';
+        chip.textContent = c.text;
+        els.globalMeta.appendChild(chip);
+      });
+    }
+
+    function renderCard(result, opts) {
+      const node = els.cardTemplate.content.cloneNode(true);
+      const title = node.querySelector('[data-title]');
+      const sub = node.querySelector('[data-sub]');
+      const meta = node.querySelector('[data-meta]');
+      const preview = node.querySelector('[data-preview]');
+      const output = node.querySelector('[data-output]');
+      const copyTextBtn = node.querySelector('[data-copy-text]');
+      const copyHtmlBtn = node.querySelector('[data-copy-html]');
+      const viewHtmlBtn = node.querySelector('[data-view-html]');
+
+      const label = widthLabel(result.width) === 'Alt' ? 'Alt width' : widthLabel(result.width) + ' text area';
+      title.textContent = widthDisplayName(result.width);
+      sub.textContent = label + ' • ' + result.targetChars + '-character target • ' + (opts.textAlign === 'left' ? 'Left-aligned' : 'Center-aligned');
+      output.value = result.text;
+      output.rows = Math.max(6, Math.min(16, result.lineCount + result.ragged.length));
+
+      preview.style.width = result.width + 'px';
+      preview.style.fontFamily = opts.fontFamily;
+      preview.style.fontSize = opts.fontSize + 'px';
+      preview.style.lineHeight = String(opts.lineHeight);
+      preview.style.fontWeight = opts.fontWeight;
+      preview.style.textAlign = opts.textAlign || 'center';
+      preview.style.marginLeft = 'auto';
+      preview.style.marginRight = 'auto';
+      preview.innerHTML = '';
+      result.ragged.forEach(r => {
+        const p = document.createElement('p');
+        p.innerHTML = r.lines.map(escapeHtml).join('<br>');
+        preview.appendChild(p);
+      });
+
+      const spread = Math.round(result.maxLine - result.minLine);
+      const fillPct = Math.round((result.maxLine / result.targetChars) * 100);
+      const chips = [
+        { text: result.lineCount + ' lines', cls: '' },
+        { text: 'Target: ' + result.targetChars + ' chars', cls: '' },
+        { text: 'Max chars: ' + Math.round(result.maxLine) + '/' + result.targetChars, cls: fillPct <= 100 ? 'ok' : 'bad' },
+        { text: 'Spread: ' + spread + ' chars', cls: spread <= result.targetChars * 0.18 ? 'ok' : spread <= result.targetChars * 0.30 ? 'warn' : 'bad' },
+        { text: 'Final lines: ' + result.minFinalWordsFound + '/' + opts.minLastWords + '+ words', cls: result.widowOk ? 'ok' : 'bad' },
+        { text: result.widowOk ? 'Widows: OK' : 'Widows: review', cls: result.widowOk ? 'ok' : 'bad' }
+      ];
+      chips.forEach(c => {
+        const chip = document.createElement('div');
+        chip.className = 'kv ' + c.cls;
+        chip.textContent = c.text;
+        meta.appendChild(chip);
+      });
+
+      copyTextBtn.addEventListener('click', () => copyString(result.text, copyTextBtn, 'Copied text'));
+      copyHtmlBtn.addEventListener('click', () => copyString(result.html, copyHtmlBtn, 'Copied HTML'));
+      viewHtmlBtn.addEventListener('click', () => showCode(result.html));
+      els.cards.appendChild(node);
+    }
+
+    async function copyString(text, button, message) {
+      const cleanedText = stripSpacesAfterReturns(text);
+      if (!cleanedText) return;
+      const original = button.textContent;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(cleanedText);
+        } else {
+          fallbackCopy(cleanedText);
+        }
+        button.textContent = message || 'Copied';
+      } catch (e) {
+        fallbackCopy(cleanedText);
+        button.textContent = message || 'Copied';
+      }
+      setTimeout(() => { button.textContent = original; }, 1100);
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+
+    function showCode(html) {
+      els.code.textContent = html;
+      els.modal.showModal();
+    }
+
+    function downloadTxt() {
+      const text = buildAllText();
+      if (!text) return;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mikes-pretty-little-paragraphs-outputs-v40.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function saveState() {
+      const data = {
+        sourceText: els.sourceText.value,
+        widths: els.widths.value,
+        charTargets: els.charTargets.value,
+        shape: els.shape.value,
+        textAlign: els.alignLeft.checked ? 'left' : 'center',
+        shapeStrength: els.shapeStrength.value,
+        lineFill: els.lineFill.value,
+        fontSize: els.fontSize.value,
+        lineHeight: els.lineHeight.value,
+        fontFamily: els.fontFamily.value,
+        fontWeight: els.fontWeight.value,
+        preserveParagraphs: els.preserveParagraphs.checked,
+        widowGuard: els.widowGuard.checked,
+        smartBreaks: els.smartBreaks.checked,
+        minLastWords: els.minLastWords.value
+      };
+      storageSet(stateKey, JSON.stringify(data));
+    }
+
+    function loadState() {
+      try {
+        const data = JSON.parse(storageGet(stateKey, '{}') || '{}');
+        if (data.textAlign === 'left') {
+          els.alignLeft.checked = true;
+          els.alignCenter.checked = false;
+        } else {
+          els.alignCenter.checked = true;
+          els.alignLeft.checked = false;
+        }
+        Object.keys(data).forEach(k => {
+          if (!(k in els)) return;
+          if (k === 'shapeStrength') return;   // don't restore; reset fresh each load
+          if (typeof data[k] === 'boolean') els[k].checked = data[k];
+          else els[k].value = data[k];
+        });
+        els.shapeStrength.value = defaultShapeStrength;
+        els.shapeStrengthNum.value = els.shapeStrength.value;
+        els.lineFillNum.value = els.lineFill.value;
+        els.fontSizeNum.value = els.fontSize.value;
+        els.lineHeightNum.value = els.lineHeight.value;
+        els.shapeStrengthVal.textContent = Math.round(Number(els.shapeStrength.value)) + '%';
+        els.lineFillVal.textContent = Math.round(Number(els.lineFill.value)) + '%';
+        els.fontSizeVal.textContent = Math.round(Number(els.fontSize.value)) + 'px';
+        els.lineHeightVal.textContent = Number(els.lineHeight.value).toFixed(2);
+        setShapeFromValue(els.shape.value);
+        updateAlignmentToggleClass();
+      } catch (e) {
+        setShapeFromValue('balanced');
+        updateAlignmentToggleClass();
+      }
+    }
+
+    const themeKey = 'mikes-pretty-little-paragraphs-theme-v27';
+
+    function applyTheme(theme) {
+      const light = theme === 'light';
+      document.body.classList.toggle('theme-light', light);
+      els.themeToggle.setAttribute('aria-pressed', light ? 'true' : 'false');
+      els.themeToggle.textContent = light ? '☀️' : '🌙';
+      els.themeToggle.title = light ? 'Toggle light/dark theme' : 'Toggle light/dark theme';
+      els.themeToggle.setAttribute('aria-label', light ? 'Light theme active. Toggle theme.' : 'Dark theme active. Toggle theme.');
+      storageSet(themeKey, light ? 'light' : 'dark');
+    }
+
+    els.themeToggle.addEventListener('click', () => {
+      const isLight = document.body.classList.contains('theme-light');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+
+    /* ============================================================
+       Per-panel 3D shape view. Each width's panel owns a small
+       WebGL canvas that renders THAT panel's rag as stacked bars
+       (length = characters vs. target, colored by fill quality).
+       The ragged text preview stays the focus; this sits beside it.
+       Canvases are pooled and re-parented into panels each render,
+       so WebGL contexts are never churned on keystrokes.
+       ============================================================ */
+    function initGLGlobals() {
+      if (glGlobalsInit) return;
+      glGlobalsInit = true;
+      window.addEventListener('pointermove', e => { glMouseX = e.clientX; glMouseY = e.clientY; }, { passive: true });
+      const st = document.getElementById('sourceText');
+      if (st) {
+        // While typing copy, the bars ease back to their neutral pose.
+        st.addEventListener('focus', () => { glSourceFocused = true; });
+        st.addEventListener('blur', () => { glSourceFocused = false; });
+        st.addEventListener('input', () => { glSourceFocused = true; });
+      }
+    }
+
+    function startGLLoop() {
+      initGLGlobals();
+      if (glLoopStarted) return;
+      glLoopStarted = true;
+      const tick = () => {
+        const now = performance.now();
+        const dt = Math.min((now - glLast) / 1000, 0.05);
+        glLast = now;
+        for (const v of towerViews) v.step(dt);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function createTowerView() {
+      if (typeof THREE === 'undefined') return null;
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'bars-canvas';
+      const tip = document.createElement('div');
+      tip.className = 'bars-tip';
+      document.body.appendChild(tip);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      const world = new THREE.Group();
+      scene.add(world);
+      const baseRotX = -0.10, baseRotY = 0.0;
+      world.rotation.set(baseRotX, baseRotY, 0);
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x1a2140, 0.95));
+      const d1 = new THREE.DirectionalLight(0xffffff, 0.8);  d1.position.set(3, 8, 6);   scene.add(d1);
+      const d2 = new THREE.DirectionalLight(0x9fb0ff, 0.35); d2.position.set(-4, 3, -4); scene.add(d2);
+
+      const STATUS = { ok: 0x7d2eff, warn: 0xd6a642, bad: 0xd24f4f, mute: 0x6b78a6 };
+      const colorFor = s => new THREE.Color(STATUS[s]);
+      const statusForRatio = (r, isLast) => r > 1.001 ? 'bad' : r >= 0.82 ? 'ok' : r >= 0.6 ? 'warn' : (isLast ? 'mute' : 'warn');
+
+      const FRAME_W = 4.0, BAR_H = 0.36, BAR_GAP = 0.10, PARA_GAP = 0.34, BAR_D = 0.55;
+      const FOV = 42 * Math.PI / 180;
+
+      let bars = [], frame = null, edges = null;
+      const pickables = [];
+      const tweens = [];
+      let dirty = true, mounted = false, curH = 1;
+
+      const tw = o => tweens.push(Object.assign({ t: 0 }, o));
+      const ease = t => 1 - Math.pow(1 - t, 3);
+      function stepTweens(dt) {
+        for (let i = tweens.length - 1; i >= 0; i--) {
+          const t = tweens[i];
+          t.t += dt / t.dur;
+          const k = Math.min(t.t, 1);
+          t.apply(ease(k));
+          if (k >= 1) tweens.splice(i, 1);
+        }
+      }
+
+      function buildBar() {
+        const mat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.08 });
+        mat.color.copy(colorFor('mute'));
+        return new THREE.Mesh(new THREE.BoxGeometry(1, BAR_H, BAR_D), mat);
+      }
+      function ensureFrame() {
+        if (frame) return;
+        frame = new THREE.Mesh(
+          new THREE.BoxGeometry(FRAME_W, 1, 0.1),
+          new THREE.MeshBasicMaterial({ color: 0x8ea0c7, transparent: true, opacity: 0.05 })
+        );
+        frame.position.z = -BAR_D / 2 - 0.14;
+        world.add(frame);
+        edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.BoxGeometry(FRAME_W, 1, 0.1)),
+          new THREE.LineBasicMaterial({ color: 0x8ea0c7, transparent: true, opacity: 0.5 })
+        );
+        edges.position.copy(frame.position);
+        world.add(edges);
+      }
+
+      function layoutFor(result) {
+        const lines = [];
+        result.ragged.forEach((r, pi) => {
+          r.metrics.forEach((mm, li) => {
+            const lastOfPara = li === r.metrics.length - 1;
+            lines.push({
+              chars: mm.chars, words: mm.words, target: result.targetChars,
+              text: r.lines[li] || '',
+              ratio: mm.chars / Math.max(1, result.targetChars),
+              paraBreakAfter: lastOfPara && pi < result.ragged.length - 1
+            });
+          });
+        });
+        return lines;
+      }
+      function yPositions(lines) {
+        let total = 0;
+        lines.forEach((ln, i) => { total += BAR_H; if (i < lines.length - 1) total += (ln.paraBreakAfter ? PARA_GAP : BAR_GAP); });
+        let y = total / 2 - BAR_H / 2;
+        const ys = [];
+        lines.forEach((ln, i) => { ys.push(y); y -= BAR_H; if (i < lines.length - 1) y -= (ln.paraBreakAfter ? PARA_GAP : BAR_GAP); });
+        return { ys, total };
+      }
+
+      function fit() {
+        const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+        const aspect = w / h;
+        const viewW = FRAME_W * 1.2;
+        const viewH = Math.max(curH, 1) + 0.4;
+        const distV = (viewH / 2) / Math.tan(FOV / 2);
+        const distH = (viewW / 2) / (Math.tan(FOV / 2) * aspect);
+        const dist = Math.max(distV, distH) * 1.12;
+        camera.position.set(0, 0, dist);
+        camera.lookAt(0, 0, 0);
+      }
+
+      function update(result, opts) {
+        ensureFrame();
+        const align = opts.textAlign === 'left' ? 'left' : 'center';
+        const lines = layoutFor(result);
+        const { ys, total } = yPositions(lines);
+        curH = Math.max(BAR_H, total) + 0.3;
+        frame.scale.y = curH; edges.scale.y = curH;
+
+        if (bars.length !== lines.length) {
+          bars.forEach(b => { world.remove(b); const idx = pickables.indexOf(b); if (idx >= 0) pickables.splice(idx, 1); b.geometry.dispose(); b.material.dispose(); });
+          bars = [];
+          lines.forEach(() => { const b = buildBar(); b.scale.set(0.001, 1, 1); world.add(b); bars.push(b); pickables.push(b); });
+        }
+
+        lines.forEach((ln, i) => {
+          const bar = bars[i];
+          const len = Math.max(0.12, ln.ratio * FRAME_W);
+          const toX = align === 'center' ? 0 : (-FRAME_W / 2 + len / 2);
+          const col = colorFor(statusForRatio(ln.ratio, i === lines.length - 1));
+          const toEm = col.clone().multiplyScalar(0.16);
+          bar.userData = { text: ln.text, chars: Math.round(ln.chars), words: ln.words, target: ln.target };
+          if (reduceMotion) {
+            bar.scale.set(len, 1, 1); bar.position.set(toX, ys[i], 0);
+            bar.material.color.copy(col); bar.material.emissive.copy(toEm);
+          } else {
+            const fLen = bar.scale.x, fX = bar.position.x, fY = bar.position.y;
+            const fCol = bar.material.color.clone(), fEm = bar.material.emissive.clone();
+            tw({ dur: 0.42, apply: e => {
+              bar.scale.x = fLen + (len - fLen) * e;
+              bar.position.x = fX + (toX - fX) * e;
+              bar.position.y = fY + (ys[i] - fY) * e;
+              bar.material.color.copy(fCol).lerp(col, e);
+              bar.material.emissive.copy(fEm).lerp(toEm, e);
+            }});
+          }
+        });
+        fit();
+        dirty = true;
+      }
+
+      function resize() {
+        const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        fit();
+        camera.updateProjectionMatrix();
+        dirty = true;
+      }
+
+      // Where should this panel's bars point right now?
+      // Toward the cursor's position on screen — unless the source box is
+      // focused (typing), in which case they ease back to the neutral pose.
+      const MAX_YAW = 0.95, MAX_PITCH = 0.5;
+      function targetRot() {
+        if (reduceMotion || glSourceFocused || glMouseX === null || !mounted) return [baseRotX, baseRotY];
+        const r = canvas.getBoundingClientRect();
+        if (!r.width || !r.height) return [baseRotX, baseRotY];
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const dx = Math.max(-1, Math.min(1, (glMouseX - cx) / (window.innerWidth / 2)));
+        const dy = Math.max(-1, Math.min(1, (glMouseY - cy) / (window.innerHeight / 2)));
+        const tx = Math.max(-0.95, Math.min(0.6, baseRotX + dy * MAX_PITCH));
+        const ty = baseRotY + dx * MAX_YAW;
+        return [tx, ty];
+      }
+
+      function step(dt) {
+        if (!mounted) return;
+        let need = false;
+        if (tweens.length) { stepTweens(dt); need = true; }
+        const [tx, ty] = targetRot();
+        const k = 1 - Math.exp(-dt * 8);
+        const nx = world.rotation.x + (tx - world.rotation.x) * k;
+        const ny = world.rotation.y + (ty - world.rotation.y) * k;
+        if (Math.abs(nx - world.rotation.x) > 0.0004 || Math.abs(ny - world.rotation.y) > 0.0004) {
+          world.rotation.x = nx; world.rotation.y = ny; need = true;
+        }
+        if (need || dirty) { renderer.render(scene, camera); dirty = false; }
+      }
+
+      canvas.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') hover(e); });
+      canvas.addEventListener('pointerleave', hideTip);
+
+      const raycaster = new THREE.Raycaster();
+      const ndc = new THREE.Vector2();
+      function hover(e) {
+        const rect = canvas.getBoundingClientRect();
+        ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+        const hit = raycaster.intersectObjects(pickables, false)[0];
+        if (!hit) { hideTip(); return; }
+        const d = hit.object.userData;
+        tip.innerHTML = '<div class="tl">' + escapeHtml(d.text || '(empty)') + '</div>' +
+          '<div class="tm">' + d.chars + ' chars \u00B7 ' + d.words + ' word' + (d.words === 1 ? '' : 's') + ' \u00B7 target ' + d.target + '</div>';
+        tip.style.left = e.clientX + 'px';
+        tip.style.top = e.clientY + 'px';
+        tip.classList.add('show');
+      }
+      function hideTip() { tip.classList.remove('show'); }
+
+      if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
+
+      return {
+        canvas, tip,
+        mount(slot) { slot.appendChild(canvas); mounted = true; resize(); dirty = true; },
+        unmount() { if (canvas.parentNode) canvas.parentNode.removeChild(canvas); hideTip(); mounted = false; },
+        update, step
+      };
+    }
+
+    function mountTowerViews(results, opts) {
+      if (typeof THREE === 'undefined') return;
+      while (towerViews.length < results.length) {
+        const v = createTowerView();
+        if (!v) break;
+        towerViews.push(v);
+      }
+      const slots = els.cards.querySelectorAll('[data-bars-slot]');
+      towerViews.forEach((v, i) => {
+        if (i < results.length && slots[i]) { v.mount(slots[i]); v.update(results[i], opts); }
+        else v.unmount();
+      });
+      startGLLoop();
+    }
+
+    (function init() {
+      const theme = storageGet(themeKey, 'light');
+      applyTheme(theme);
+      loadState();
+      setShapeFromValue(els.shape.value);
+      updateAlignmentToggleClass();
+      if (!els.sourceText.value) els.sourceText.value = '';
+      updateSourceCharCount();
+      render();
+    })();
+  </script>
+</body>
+</html>
