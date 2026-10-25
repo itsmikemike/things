@@ -269,7 +269,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     </div>
     <div class="grid">
       <button class="gcard g-shop" onclick="startGame('shop')">
-        <span class="world">World 1</span><h2>Salish's Creator Studio</h2><p>Grow the channel with decimals, money, percents and ratios.</p>
+        <span class="world">World 1</span><h2>Salish's Creator Studio</h2><p>Grow the channel with multiplication word problems.</p>
         <span class="lvl" id="lvl-shop">Level 1</span><span class="big">🎬</span>
       </button>
       <button class="gcard g-potion" onclick="startGame('potion')">
@@ -281,7 +281,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
         <span class="lvl" id="lvl-lab">Level 1</span><span class="big">🚀</span>
       </button>
       <button class="gcard g-stage" onclick="startGame('stage')">
-        <span class="world">World 4</span><h2>Miku's Concert Stage</h2><p>Light up the crowd with order of operations, integers and equations.</p>
+        <span class="world">World 4</span><h2>Miku's Concert Stage</h2><p>Keep the beat with times tables. Fast answers earn bonus points!</p>
         <span class="lvl" id="lvl-stage">Level 1</span><span class="big">🎤</span>
       </button>
       <button class="gcard g-mix" onclick="startGame('mix')">
@@ -346,7 +346,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     <div class="panel">
       <h2>⚙️ Settings</h2>
       <div class="two">
-        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 400. A focused day (2 lessons, 24 questions) earns about 350–500 points.</small></label>
+        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 100. Each first-try correct answer earns 100 points ($1), a second-try correct answer earns 50¢, and combos and fast answers add 10¢. Set a daily max below if you want a ceiling.</small></label>
         <label class="field">Daily goal (questions)<input id="sGoal" type="number" min="5" inputmode="numeric"><small>Meeting the goal keeps the streak and gives a bonus.</small></label>
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
@@ -645,6 +645,51 @@ function genLab(L){
   return {tag:'Composite area',q:`The ${gadget} floor is an L-shape: a <b>${W}×${H}</b> rectangle with a <b>${cw}×${ch}</b> corner cut out. What's the area?`,ans:String(ans),unit:'sq units',choices:numChoices(ans,[W*H,W*H+cw*ch,2*(W+H),ans-cw]),vis:svgL(W,H,cw,ch),explain:`Big rectangle ${W} × ${H} = ${W*H}. Cut-out ${cw} × ${ch} = ${cw*ch}. ${W*H} − ${cw*ch} = <b>${ans}</b>.`};
 }
 
+
+/* ---------- multiplication worlds ---------- */
+function mulCands(a,b){ const p=a*b; return [a*(b+1),a*(b-1),(a+1)*b,(a-1)*b,a+b,p+10,p-10,p+1,p-1]; }
+function genMulFacts(L){
+  const song=pick(['World is Mine','Senbonzakura','Tell Your World','Ievan Polkka','Melt','Love is War']);
+  const t = L===1? pick(['fact','fact','fact','miss']) : L===2? pick(['fact','fact','miss','sq']) : pick(['tens','tens','miss','fact','hund']);
+  const hi = L===1? 9 : 12;
+  const a=R(2,hi), b=R(2,hi), p=a*b;
+  if(t==='fact') return {tag:'Times tables',speed:6,q:`🎵 <i>${song}</i> — hit the note!<br><b>${a} × ${b}</b>`,ans:String(p),choices:numChoices(p,mulCands(a,b)),
+    explain:`${a} × ${b} = <b>${p}</b>. Tip: ${a} groups of ${b}. ${b>2?`Also ${a} × ${b-1} = ${a*(b-1)}, plus one more ${a} = ${p}.`:''}`};
+  if(t==='miss') return {tag:'Missing factor',speed:8,q:`Miku's dancers line up in rows of <b>${a}</b>. There are <b>${p}</b> dancers. How many rows?<br><b>${a} × ? = ${p}</b>`,ans:String(b),choices:numChoices(b,[b+1,b-1,a,b+2,p-a],3),
+    explain:`${a} × ${b} = ${p}, so the missing number is <b>${b}</b>. (That's ${p} ÷ ${a}.)`};
+  if(t==='sq'){ const n=R(2,12); return {tag:'Square numbers',speed:6,q:`🎵 Encore! <b>${n} × ${n}</b>`,ans:String(n*n),choices:numChoices(n*n,[n*2,n*(n+1),n*(n-1),n*n+10]),explain:`${n} × ${n} = <b>${n*n}</b>. That's ${n} squared, ${n}<sup>2</sup>.`}; }
+  if(t==='tens'){ const x=R(2,9), y=R(2,9), z=x*10, ans=z*y; return {tag:'Multiplying by tens',speed:8,q:`<b>${y}</b> rows of <b>${z}</b> fans wave teal glow sticks. How many fans?<br><b>${z} × ${y}</b>`,ans:String(ans),choices:numChoices(ans,[x*y,ans*10,z+y,(x+1)*y*10]),
+    explain:`${x} × ${y} = ${x*y}, then add the zero: <b>${ans}</b>.`}; }
+  const x=R(2,9), y=R(2,9), ans=x*100*y;
+  return {tag:'Multiplying by hundreds',speed:8,q:`Each of <b>${y}</b> concert halls has <b>${x*100}</b> seats. How many seats in all?`,ans:String(ans),choices:numChoices(ans,[x*y*10,x*y,ans*10,x*100+y]),
+    explain:`${x} × ${y} = ${x*y}, then add two zeros: <b>${ans}</b>.`};
+}
+function genMulWords(L){
+  const it=pick(ITEMS);
+  const ctx = [
+    (a,b)=>[`Salish posts <b>${a}</b> videos every week. How many videos in <b>${b}</b> weeks?`,'videos'],
+    (a,b)=>[`Salish packs <b>${b}</b> ${it}s into each of <b>${a}</b> giveaway boxes. How many ${it}s in all?`,`${it}s`],
+    (a,b)=>[`Each of Salish's <b>${a}</b> vlog episodes has <b>${b}</b> funny bloopers. How many bloopers total?`,'bloopers'],
+    (a,b)=>[`Salish films <b>${b}</b> clips a day for <b>${a}</b> days. How many clips?`,'clips'],
+    (a,b)=>[`A ${it} costs <b>$${b}</b>. Salish buys <b>${a}</b> of them for her friends. What's the total?`,'$'],
+  ];
+  let a,b;
+  if(L===1){ a=R(2,9); b=R(2,10); }
+  else if(L===2){ a=R(2,9); b=R(12,99); }
+  else { if(Math.random()<.5){ a=R(11,39); b=R(11,49); } else { a=R(2,9); b=R(101,499); } }
+  const [q,unit]=pick(ctx)(a,b), p=a*b;
+  const noCarry = (()=>{ const ones=b%10, tens=Math.floor(b/10); return a<10? (ones*a)%10 + 10*((tens*a)%10) + 100*Math.floor(b/100)*a : NaN; })();
+  const ans = unit==='$'? '$'+p : String(p);
+  const fmt = v => unit==='$'? '$'+v : String(v);
+  const ex = (a<10 && b>=10)
+    ? (()=>{ const parts=String(b).split('').reverse().map((d,i)=>(+d)*10**i).filter(v=>v).reverse(); return `Break ${b} apart: ${parts.map(v=>`${a} × ${v} = ${a*v}`).join(', ')}. Add them: <b>${fmt(p)}</b>.`; })()
+    : (a>=10 ? `Break it apart: ${a} × ${b} = ${a} × ${Math.floor(b/10)*10} + ${a} × ${b%10} = ${a*Math.floor(b/10)*10} + ${a*(b%10)} = <b>${fmt(p)}</b>.` : `${a} × ${b} = <b>${fmt(p)}</b>.`);
+  const cands=[a*(b+1),a*(b-1),a+b,p+10,p-10,noCarry].concat(L>1? [p+100,p-100] : [(a+1)*b,(a-1)*b]);
+  if(a>=10) cands.push(a*Math.floor(b/10)*10 + a%10*(b%10), Math.floor(a/10)*Math.floor(b/10)*100 + (a%10)*(b%10));
+  return {tag: L===1?'Multiplication':'Multi-digit multiplication', q, ans,
+    choices: choices(ans, cands.filter(v=>v>0 && v!==p && Number.isInteger(v)).map(fmt), ()=>fmt(p+R(-9,9)*(L===1?1:10))), explain:ex};
+}
+
 /* ---------- small SVG drawings ---------- */
 const SV=(w,h,inner)=>`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Fredoka,sans-serif" font-size="16" font-weight="600">${inner}</svg>`;
 function svgRect(w,h,fill){ const s=Math.min(220/w,110/h), W=w*s, H=h*s, x=(300-W)/2, y=(150-H)/2;
@@ -670,22 +715,28 @@ function vialsSVG(frs){ const cols=['#8a4dff','#14a383'];
     return `<rect x="${x}" y="20" width="56" height="${H}" rx="16" fill="#f4f1ff" stroke="#2d2350" stroke-width="3"/><rect x="${x+3}" y="${20+H-fh}" width="50" height="${fh-3}" rx="13" fill="${cols[i]}" opacity=".85"><animate attributeName="height" from="0" to="${fh-3}" dur=".8s"/><animate attributeName="y" from="${20+H}" to="${20+H-fh}" dur=".8s"/></rect>`;}).join(''));}
 
 const GAMES={
-  shop:{name:"Salish's Creator Studio",gen:genShop,cls:'s-shop'},
+  shop:{name:"Salish's Creator Studio",gen:genMulWords,cls:'s-shop'},
   potion:{name:"Maomao's Apothecary",gen:genPotion,cls:'s-potion'},
   lab:{name:"Mark Rober's Lab",gen:genLab,cls:'s-lab'},
-  stage:{name:"Miku's Concert Stage",gen:genStage,cls:'s-stage'},
+  stage:{name:"Miku's Concert Stage",gen:genMulFacts,cls:'s-stage'},
   mix:{name:'Daily Mix',cls:'s-mix'}
 };
+// The Daily Mix still practices the older topics for these two worlds half the time
+const LEGACY_GEN={shop:genShop, stage:genStage};
 
 /* =========================================================
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:400,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true},
+const DEFAULTS={ settings:{pointsPerDollar:100,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
   S=Object.assign(structuredClone(DEFAULTS),S); S.settings=Object.assign(structuredClone(DEFAULTS.settings),S.settings||{});
+  if(!S.settings.pointsV2){ // switch to 100 points (= $1) per first-try correct answer; keep the jar's dollar value
+    const old=S.settings.pointsPerDollar||400; S.settings.pointsV2=1;
+    if(old!==100){ S.unpaid=Math.round(S.unpaid*100/old); S.lifetime=Math.round(S.lifetime*100/old); for(const d of Object.values(S.days)) d.pts=Math.round(d.pts*100/old); for(const pay of S.payouts) pay.points=Math.round(pay.points*100/old); }
+    S.settings.pointsPerDollar=100; if(S.settings.dailyCap) S.settings.dailyCap=Math.round(S.settings.dailyCap*100/old); }
   if(!S.settings.lessonV2){ S.settings.lessonV2=1; S.settings.roundLen=12; S.settings.breakEvery=4; if(S.settings.dailyGoal===20) S.settings.dailyGoal=24; }
   S.settings.worldVideos ||= {};
   for(const g of ['potion','stage','shop','lab']) S.worlds[g]=Object.assign({level:1,answered:0,firstTry:0,recent:[]},S.worlds[g]||{}); }
@@ -796,7 +847,7 @@ function startGame(world){
 function worldFor(){ return G.world==='mix'? pick(['potion','stage','shop','lab']) : G.world; }
 function nextQ(){
   hideSheet();
-  const w=worldFor(); G.qWorld=w; G.q=GAMES[w].gen(S.worlds[w].level); G.tries=0; G.cur='';
+  const w=worldFor(); G.qWorld=w; const gen=(G.world==='mix' && LEGACY_GEN[w] && Math.random()<.5)? LEGACY_GEN[w] : GAMES[w].gen; G.q=gen(S.worlds[w].level); G.qStart=Date.now(); G.tries=0; G.cur='';
   if(G.world==='mix') { $('game').classList.remove('s-potion','s-stage','s-shop','s-lab'); }
   renderProg(); renderQ();
 }
@@ -856,14 +907,15 @@ function answer(ok, el){
   if(ok){
     const first=G.tries===1;
     G.combo = first? G.combo+1 : 0; G.best=Math.max(G.best,G.combo);
-    let pts = first? 10*lv : 3*lv; if(G.combo>=3) pts+=5;
+    let pts = first? 100 : 50; if(G.combo>=3) pts+=10;
+    const fast = first && G.q.speed && (Date.now()-G.qStart) < G.q.speed*1000; if(fast) pts+=10;
     pts = grant(pts);
     record(first);
     G.results.push(first); SFX.correct(); if(G.combo>=3) setTimeout(SFX.combo,250);
-    if(pts>0) { floatPts('+'+pts,el); setTimeout(SFX.coin,180); }
+    if(pts>0) { floatPts('+'+money(pts/S.settings.pointsPerDollar),el); setTimeout(SFX.coin,180); }
     sceneReact(true); mochiMood(true);
     const cheers = G.combo>=5? ['UNSTOPPABLE! 🔥','Fever mode! ✨','Legendary combo!'] : first? ['Awesome!','Nailed it!','Brilliant!','Perfect!','Sugoi! ✨','You got it!'] : ['Got it on the second try!','Nice recovery!'];
-    showSheet(true, pick(cheers)+(pts>0?`  +${pts} 💎`:''), first? (G.combo>=3?`Combo ×${G.combo}! Bonus +5.`:'') : G.q.explain);
+    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?'⚡ On the beat! Speed bonus +10¢.':'', G.combo>=3?`Combo ×${G.combo}! Bonus +10¢.`:''].filter(Boolean).join(' ') : G.q.explain);
   } else if(G.tries===1){
     G.combo=0; SFX.wrong(); sceneReact(false); mochiMood(false); renderProg();
     toast('Not quite! One more try 💪');
@@ -905,12 +957,12 @@ function showSheet(good,h,e){
 function hideSheet(){ sheetOpen=false; $('sheet').className='sheet'; }
 function advance(){
   hideSheet(); G.idx++;
-  if(G.levelUp){ const msg=G.levelUp; G.levelUp=null; return celebrate('⬆️ Level up!',`<p style="font-size:20px">${msg}!<br>Questions get trickier and worth more points.</p>`,()=>advance2()); }
+  if(G.levelUp){ const msg=G.levelUp; G.levelUp=null; return celebrate('⬆️ Level up!',`<p style="font-size:20px">${msg}!<br>Questions get a little trickier now.</p>`,()=>advance2()); }
   advance2();
 }
 function advance2(){
   if(G.goalHit){ G.goalHit=false; const st=curStreak(), bonus=grant(50+Math.min(50,5*st));
-    return celebrate('🎯 Daily goal complete!',`<p style="font-size:20px">🔥 ${st}-day streak!<br>Bonus <b>+${bonus} 💎</b></p>`,()=>advance2()); }
+    return celebrate('🎯 Daily goal complete!',`<p style="font-size:20px">🔥 ${st}-day streak!<br>Bonus <b>+${money(bonus/S.settings.pointsPerDollar)}</b></p>`,()=>advance2()); }
   const every=S.settings.breakEvery;
   if(G.idx>=G.total) return takeBreak(()=>finishRound());
   if(G.idx%every===0) return takeBreak(()=>nextQ());
@@ -998,7 +1050,7 @@ function finishRound(){
   SFX.fanfare(); confetti(200); setTimeout(()=>confetti(120,innerWidth*.2,innerHeight*.4),400); setTimeout(()=>confetti(120,innerWidth*.8,innerHeight*.4),700);
   openModal(`<h2>${stars===3?'🏆 Perfect round!':stars===2?'🌟 Great job!':stars===1?'👍 Nice work!':'💪 Keep practicing!'}</h2>
     <div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${.2+i*.25}s">${i<stars?'⭐':'☆'}</span>`).join('')}</div>
-    <div class="stats3"><div><b>${correct}/${G.total}</b>first try</div><div><b>+${G.pts}</b>points</div><div><b>${G.best}</b>best combo</div></div>
+    <div class="stats3"><div><b>${correct}/${G.total}</b>first try</div><div><b>+${money(G.pts/S.settings.pointsPerDollar)}</b>earned</div><div><b>${G.best}</b>best combo</div></div>
     ${G.squishiesWon.length?`<div class="newsq">${G.squishiesWon.map(s=>`<span style="font-size:40px">${s[0]}</span>`).join('')}<div>squishies won!</div></div>`:''}
     <p style="font-size:18px">🫙 Allowance jar: <b>${money(owed())}</b></p>
     <div class="row" style="justify-content:center"><button class="btn soft" id="mHome">Home</button><button class="btn" id="mAgain">Play again</button></div>`);
@@ -1063,7 +1115,7 @@ function renderParent(){
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.pointsPerDollar=num('sRate',1,100000,400); st.dailyGoal=num('sGoal',5,200,20); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
+  st.pointsPerDollar=num('sRate',1,100000,100); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
