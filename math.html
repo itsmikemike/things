@@ -351,7 +351,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
         <label class="field">Video break every N questions<input id="sEvery" type="number" min="2" max="20" inputmode="numeric"><small>Default 4, so a 12-question lesson has 3 video breaks (the last one comes right before the results).</small></label>
-        <label class="field">Break video length (seconds)<input id="sSecs" type="number" min="10" max="120" inputmode="numeric"></label>
+        <label class="field">Longest a break video can run (minutes)<input id="sMax" type="number" min="0" max="60" inputmode="numeric"><small>0 = no limit, so every video plays to the end. If you set a limit, longer videos stop there.</small></label>
         <label class="field">Change PIN<input id="sPin" type="text" inputmode="numeric" maxlength="6" placeholder="leave blank to keep"></label>
       </div>
       <h3 style="text-align:left;margin:6px 0">📺 Break videos for each world</h3>
@@ -362,7 +362,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
         <label class="field">World 3 · Mark Rober<textarea id="v-lab"></textarea></label>
         <label class="field">World 4 · Hatsune Miku<textarea id="v-stage"></textarea></label>
       </div>
-      <p class="note-s">The timer only counts while the video is actually playing. Videos only play once the page is hosted online (GitHub Pages), not from a file opened on the computer.</p>
+      <div class="row" style="margin:0 0 12px"><button class="btn soft" onclick="testVideo('shop')">▶ Test World 1</button><button class="btn soft" onclick="testVideo('potion')">▶ Test World 2</button><button class="btn soft" onclick="testVideo('lab')">▶ Test World 3</button><button class="btn soft" onclick="testVideo('stage')">▶ Test World 4</button></div>
+      <p class="note-s">Each video plays to the end, and then the Back to math button lights up. Videos only play once the page is hosted online (GitHub Pages), not from a file opened on the computer.</p>
       <div class="row"><button class="btn" onclick="saveSettings()">Save settings</button><button class="btn soft" onclick="adjustPts()">Add / remove points</button></div>
     </div>
     <div class="panel">
@@ -680,7 +681,7 @@ const GAMES={
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:400,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,videoSecs:30,worldVideos:{},pin:'1234',sound:true},
+const DEFAULTS={ settings:{pointsPerDollar:400,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -951,36 +952,46 @@ function loadYT(){
 let brkTimer=null, ytPlayer=null;
 function takeBreak(next){
   SFX.fanfare(); confetti(100);
-  const w=G.qWorld, secs=S.settings.videoSecs, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
+  const w=G.qWorld, cap=(S.settings.maxVideoMin||0)*60, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
   const src=srcs.length? pick(srcs) : null;
   openModal(`<h2>📺 Break time!</h2><div class="note-s" style="text-align:center;margin-bottom:8px">Video from ${WORLD_LABEL[w]}</div>
     <div class="vidwrap ${src&&src.short?'short':''}"><div id="ytp"></div><div class="vidmsg" id="vmsg">Loading video…</div></div>
-    <div class="timer" id="btime">${secs}s</div><button class="btn" id="mOk" disabled>Back to math in ${secs}s</button>`);
-  let left=secs, playing=false, waited=0, over=false;
+    <div class="timer" id="btime">&nbsp;</div><button class="btn" id="mOk" disabled>Back to math after the video</button>`);
+  let watched=0, playing=false, waited=0, over=false; const mmss=t=>{ t=Math.max(0,Math.round(t)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
   const btn=()=>$('mOk'), msg=t=>{ const m=$('vmsg'); if(m){ m.textContent=t; m.style.display=t?'block':'none'; } };
   const finish=(text)=>{ if(over) return; over=true; clearInterval(brkTimer); const b=btn(); if(!b) return; b.disabled=false; b.textContent='Back to math! ➜';
     $('btime').textContent=text||"Time's up!"; try{ ytPlayer&&ytPlayer.stopVideo(); }catch(e){} SFX.coin(); };
   clearInterval(brkTimer);
   brkTimer=setInterval(()=>{ if(!btn()){ clearInterval(brkTimer); return; }
-    if(playing){ left--; $('btime').textContent=left+'s'; btn().textContent=`Back to math in ${left}s`; if(left<=0) finish(); }
+    if(playing){ watched++; let rem=null; try{ rem=ytPlayer.getDuration()-ytPlayer.getCurrentTime(); }catch(_){}
+      if(cap) rem = rem==null? cap-watched : Math.min(rem, cap-watched);
+      if(rem!=null && rem>=0) $('btime').textContent=mmss(rem)+' left';
+      if(cap && watched>=cap) finish("Time's up!"); }
     else if(!over && ++waited===4) msg('Tap ▶ on the video to start it');
     else if(!over && waited>=25) finish('Video didn\'t start, that\'s OK!'); },1000);
+  let lastErr=null; const orig=src? Object.assign({},src) : null;
   const make=(s)=>{
     const opts={host:'https://www.youtube-nocookie.com',width:'100%',height:'100%',playerVars:{playsinline:1,rel:0,modestbranding:1,autoplay:1},
       events:{
         onReady:e=>{ if(s.list){ let n=0; const tryPick=()=>{ let pl=null; try{ pl=e.target.getPlaylist(); }catch(_){}
               if(pl&&pl.length){ e.target.playVideoAt(R(0,Math.min(pl.length,25)-1)); } else if(n++<8) setTimeout(tryPick,300); else e.target.playVideo(); }; tryPick(); }
           else e.target.playVideo(); },
-        onStateChange:e=>{ playing = e.data===YT.PlayerState.PLAYING; if(playing) msg(''); if(e.data===YT.PlayerState.ENDED && !over && left>0){ try{ s.list? e.target.nextVideo() : e.target.playVideo(); }catch(_){} } },
-        onError:()=>{ if(s.fallback){ const f={list:s.fallback,short:s.short}; s.fallback=null; try{ ytPlayer.destroy(); }catch(_){} const v=document.querySelector('.vidwrap'); if(v){ v.insertAdjacentHTML('afterbegin','<div id="ytp"></div>'); } make(f); }
-          else { msg('This video can\'t play here. 😅 Take a quick stretch!'); finish('Stretch break!'); } } } };
+        onStateChange:e=>{ playing = e.data===YT.PlayerState.PLAYING; if(playing) msg(''); if(e.data===YT.PlayerState.ENDED && !over) finish('That was fun! 🎉'); },
+        onError:e=>{ const code=e&&e.data; lastErr=code;
+          const retry=f=>{ try{ ytPlayer.destroy(); }catch(_){} const v=document.querySelector('.vidwrap'); if(v && !$('ytp')) v.insertAdjacentHTML('afterbegin','<div id="ytp"></div>'); make(f); };
+          if(s.fallback) retry({list:s.fallback,short:s.short,plainHost:s.plainHost});
+          else if(!s.plainHost) retry(Object.assign({},orig,{plainHost:true}));
+          else { msg(`This video can't play here (YouTube error ${code}). 😅 Take a quick stretch!`); finish('Stretch break!'); } } } };
+    if(s.plainHost) opts.host='https://www.youtube.com';
     if(s.list){ opts.playerVars.listType='playlist'; opts.playerVars.list=s.list; } else opts.videoId=s.id;
     ytPlayer=new YT.Player('ytp',opts);
   };
-  if(!src){ msg('No videos are set up for this world.'); finish('Stretch break!'); }
+  if(location.protocol==='file:'){ msg('Videos only play from the website link (GitHub Pages), not from a downloaded file.'); finish('Stretch break!'); }
+  else if(!src){ msg('No videos are set up for this world.'); finish('Stretch break!'); }
   else loadYT().then(()=>{ if($('ytp')) make(src); }).catch(()=>{ msg('YouTube didn\'t load. 😅 Take a quick stretch!'); finish('Stretch break!'); });
   btn().onclick=()=>{ clearInterval(brkTimer); try{ ytPlayer&&ytPlayer.destroy(); }catch(e){} ytPlayer=null; closeModal(); next(); };
 }
+function testVideo(w){ saveSettings(); const saved=G; G={qWorld:w}; takeBreak(()=>{ G=saved; }); }
 function finishRound(){
   const correct=G.results.filter(Boolean).length, pct=correct/G.total, stars= pct>=.9?3 : pct>=.7?2 : pct>=.4?1 : 0;
   const sq=awardSquishy(G.world==='mix'); if(sq) G.squishiesWon.push(sq);
@@ -1048,11 +1059,11 @@ function renderParent(){
   $('pHist').innerHTML = S.payouts.length? S.payouts.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${p.points}</td><td>${money(p.dollars)}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts yet</td></tr>';
   $('pStats').innerHTML=['shop','potion','lab','stage'].map(k=>{ const w=S.worlds[k]; return `<tr><td>${GAMES[k].name}</td><td>${w.level}</td><td>${w.answered}</td><td>${w.answered?Math.round(w.firstTry/w.answered*100)+'%':'–'}</td></tr>`; }).join('');
   const t=today(); $('pDays').innerHTML=Array.from({length:7},(_,i)=>{ const d=dayOffset(t,-i), r=S.days[d]||{q:0,pts:0,goal:false}; return `<tr><td>${i===0?'Today':d}</td><td>${r.q}</td><td>${r.pts}</td><td>${r.goal?'✅':''}</td></tr>`; }).join('');
-  $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sSecs').value=st.videoSecs; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
+  $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.pointsPerDollar=num('sRate',1,100000,400); st.dailyGoal=num('sGoal',5,200,20); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.videoSecs=num('sSecs',10,120,30);
+  st.pointsPerDollar=num('sRate',1,100000,400); st.dailyGoal=num('sGoal',5,200,20); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
