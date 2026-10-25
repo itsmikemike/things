@@ -278,6 +278,12 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
 .foot{text-align:center;margin-top:22px}
 .linkbtn{color:var(--muted);font-size:15px;font-weight:600;padding:10px 16px;border-radius:999px;text-decoration:underline;text-underline-offset:3px}
 .linkbtn:active{background:rgba(0,0,0,.05)}
+
+.sayq{font-size:16px;vertical-align:middle;margin-left:4px;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb,var(--theme) 14%,white)}
+.sayq:active{transform:scale(.9)}
+#fbSay{padding:12px 16px;font-size:16px}
+.mochi.talk .mouth{animation:talk .25s infinite alternate}
+@keyframes talk{from{height:4px}to{height:10px}}
 </style>
 </head>
 <body>
@@ -323,7 +329,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     </div>
     <div class="scene" id="scene"></div>
     <div class="qcard" id="qcard">
-      <span class="tag" id="qtag"></span>
+      <span class="tag" id="qtag"></span> <button class="sayq" id="sayQ" aria-label="Read the question aloud">🔈</button>
       <div class="qtext" id="qtext"></div>
       <div class="visual" id="qvis"></div>
       <div id="qans"></div>
@@ -371,6 +377,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
       <div class="two">
         <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 100. Each first-try correct answer earns 100 points ($1), a second-try correct answer earns 50¢, and combos and fast answers add 10¢. Set a daily max below if you want a ceiling.</small></label>
         <label class="field">Daily goal (questions)<input id="sGoal" type="number" min="5" inputmode="numeric"><small>Meeting the goal keeps the streak and gives a bonus.</small></label>
+        <label class="field">Read explanations aloud<select id="sVoice"><option value="1">Yes, automatically when she misses one</option><option value="0">Only when she taps 🔊 Hear it</option></select><small>Uses the iPad or computer's built-in voice. Works offline.</small></label>
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
         <label class="field">Video break every N questions<input id="sEvery" type="number" min="2" max="20" inputmode="numeric"><small>Default 4, so a 12-question lesson has 3 video breaks (the last one comes right before the results).</small></label>
@@ -399,7 +406,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
   </section>
 </div>
 
-<div class="sheet" id="sheet"><div class="in"><div class="mochi" id="sheetMochi" style="transform:scale(.8)"><div class="body"></div><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div><div class="msg"><h3 id="fbH"></h3><div class="exp" id="fbE"></div></div><button class="btn" id="fbBtn">Continue</button></div></div>
+<div class="sheet" id="sheet"><div class="in"><div class="mochi" id="sheetMochi" style="transform:scale(.8)"><div class="body"></div><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div><div class="msg"><h3 id="fbH"></h3><div class="exp" id="fbE"></div></div><button class="btn soft" id="fbSay" aria-label="Hear the explanation">🔊 Hear it</button><button class="btn" id="fbBtn">Continue</button></div></div>
 <div class="overlay" id="ov"><div class="modal" id="modal"></div></div>
 
 <script>
@@ -510,10 +517,10 @@ function genPotion(L){
     const n1=R(1,d1-1); let n2=R(1,d2-1);
     if(n1*d2===n2*d1) n2 = n2>1? n2-1 : n2+1;
     const a=F(n1,d1), b=F(n2,d2), big = a.val()>b.val()? a : b;
-    const L2=lcm(d1,d2);
+    const L2=lcm(a.d,b.d);
     return {tag:'Compare fractions', q:`Maomao is tasting for poison! Which cup has <b>more</b> ${herb} tea?`, ans:big.str(false), choices:shuffle([a.str(false),b.str(false)]),
       vis:vialsSVG([a,b]),
-      explain:`Common denominator ${L2}: ${fh(n1+'/'+d1)} = ${fh(n1*L2/d1+'/'+L2)} and ${fh(n2+'/'+d2)} = ${fh(n2*L2/d2+'/'+L2)}. So <b>${fh(big.str(false))}</b> is more.`};
+      explain:`Common denominator ${L2}: ${fh(a.n+'/'+a.d)} = ${fh(a.n*L2/a.d+'/'+L2)} and ${fh(b.n+'/'+b.d)} = ${fh(b.n*L2/b.d+'/'+L2)}. So <b>${fh(big.str(false))}</b> is more.`};
   }
   if(t==='ofwhole'){
     const d=pick([2,3,4,5,6,8,10]), w=d*R(2,9), n=R(1,d-1), ans=w/d*n;
@@ -751,7 +758,7 @@ const LEGACY_GEN={shop:genShop, stage:genStage};
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:100,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true},
+const DEFAULTS={ settings:{pointsPerDollar:100,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true,voice:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -797,6 +804,45 @@ const SFX={
   fanfare(){ [[523,0],[659,.12],[784,.24],[1047,.36],[784,.5],[1047,.62]].forEach(([f,a])=>{tone(f,.22,{type:'triangle',at:a,vol:.14}); tone(f/2,.22,{type:'sine',at:a,vol:.08});}); },
   whoosh(){ noise(.4,{vol:.15,freq:400,q:.7,slide:2400}); }
 };
+
+
+/* =========================================================
+   Read-aloud explanations (built-in Web Speech voice, no files)
+   ========================================================= */
+const TTS={ok:'speechSynthesis' in window, voice:null};
+function pickVoice(){ if(!TTS.ok) return; const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)); if(!vs.length) return;
+  const pref=[/Samantha/i,/Ava/i,/Allison/i,/Google US English/i,/Aria/i,/Jenny/i,/Zira/i,/Karen/i,/Moira/i];
+  for(const r of pref){ const v=vs.find(v=>r.test(v.name) && /en[-_]US/i.test(v.lang)) || vs.find(v=>r.test(v.name)); if(v){ TTS.voice=v; return; } }
+  TTS.voice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs[0]; }
+if(TTS.ok){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+const ORD={2:['half','halves'],3:['third','thirds'],4:['fourth','fourths'],5:['fifth','fifths'],6:['sixth','sixths'],7:['seventh','sevenths'],8:['eighth','eighths'],9:['ninth','ninths'],10:['tenth','tenths'],11:['eleventh','elevenths'],12:['twelfth','twelfths']};
+const ONES=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],
+      TENS=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function ordinal(d){ if(d>=100) return null; const w = d<20? ONES[d] : TENS[Math.floor(d/10)]+(d%10?'-'+ONES[d%10]:'');
+  return w.replace(/one$/,'first').replace(/two$/,'second').replace(/three$/,'third').replace(/five$/,'fifth').replace(/eight$/,'eighth').replace(/nine$/,'ninth').replace(/twelve$/,'twelfth').replace(/y$/,'ieth').replace(/(?<!first|second|third|fifth|eighth|ninth|twelfth|ieth)$/,'th'); }
+function fracWords(n,d){ n=+n; d=+d; if(ORD[d]) return n+' '+ORD[d][n===1?0:1]; const o=ordinal(d); return o? n+' '+o+(n===1?'':'s') : n+' over '+d; }
+function speakable(html){
+  const box=document.createElement('div'); box.innerHTML=html;
+  box.querySelectorAll('.fr').forEach(f=>{ const [a,b]=f.children; f.replaceWith(' '+a.textContent+'/'+b.textContent+' '); });
+  box.querySelectorAll('sup').forEach(x=>{ const t=x.textContent; x.replaceWith(t==='2'?' squared ':t==='3'?' cubed ':' to the power of '+t+' '); });
+  box.querySelectorAll('br').forEach(x=>x.replaceWith('. '));
+  let t=box.textContent;
+  t=t.replace(/(\d+) (\d+)\/(\d+)/g,(m,w,n,d)=>w+' and '+fracWords(n,d))
+     .replace(/(\d+)\s*\/\s*(\d+)/g,(m,n,d)=>fracWords(n,d))
+     .replace(/½/g,'one half').replace(/×/g,' times ').replace(/÷/g,' divided by ').replace(/−/g,' minus ').replace(/\+/g,' plus ').replace(/=/g,' equals ')
+     .replace(/(\d) : (\d)/g,'$1 to $2').replace(/\? : (\d)/g,'what to $1').replace(/°F/g,' degrees').replace(/°/g,' degrees').replace(/π/g,'pie').replace(/≈/g,' about ')
+     .replace(/\bsq (ft|in|cm|m|units)\b/g,(m,u)=>'square '+({ft:'feet',in:'inches',cm:'centimeters',m:'meters',units:'units'})[u])
+     .replace(/\bcu in\b/g,'cubic inches').replace(/→|➜/g,', ').replace(/[🎵🎉⚡🫙💎✨🔥😅👀]/gu,'')
+     .replace(/-(\d)/g,'negative $1').replace(/\bx\b/g,'x').replace(/\s+/g,' ').trim();
+  return t;
+}
+function stopSpeech(){ if(TTS.ok) try{ speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.mochi.talk').forEach(m=>m.classList.remove('talk')); }
+function speak(html){
+  if(!TTS.ok) return; stopSpeech();
+  const u=new SpeechSynthesisUtterance(speakable(html)); if(TTS.voice) u.voice=TTS.voice; u.lang=(TTS.voice&&TTS.voice.lang)||'en-US'; u.rate=.92; u.pitch=1.05;
+  const m=$('sheetMochi'); u.onstart=()=>m&&m.classList.add('talk'); u.onend=u.onerror=()=>m&&m.classList.remove('talk');
+  speechSynthesis.speak(u);
+}
 
 /* =========================================================
    Confetti + bubbles
@@ -882,7 +928,7 @@ function renderProg(){
 function renderQ(){
   const q=G.q, lv=S.worlds[G.qWorld].level;
   $('qtag').textContent=(G.world==='mix'?GAMES[G.qWorld].name+' · ':'')+q.tag+' · '+'★'.repeat(lv);
-  $('qtext').innerHTML=q.q; $('qvis').innerHTML=q.vis||'';
+  $('qtext').innerHTML=q.q; $('sayQ').style.display=TTS.ok?'':'none'; $('sayQ').onclick=()=>speak(q.q); $('qvis').innerHTML=q.vis||'';
   const box=$('qans');
   if(q.input){
     box.innerHTML=`<div class="answerbox"><div class="disp empty" id="disp"></div>${q.unit?`<span>${q.unit}</span>`:''}</div>
@@ -938,17 +984,17 @@ function answer(ok, el){
     if(pts>0) { floatPts('+'+money(pts/S.settings.pointsPerDollar),el); setTimeout(SFX.coin,180); }
     sceneReact(true); mochiMood(true);
     const cheers = G.combo>=5? ['UNSTOPPABLE! 🔥','Fever mode! ✨','Legendary combo!'] : first? ['Awesome!','Nailed it!','Brilliant!','Perfect!','Sugoi! ✨','You got it!'] : ['Got it on the second try!','Nice recovery!'];
-    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?'⚡ On the beat! Speed bonus +10¢.':'', G.combo>=3?`Combo ×${G.combo}! Bonus +10¢.`:''].filter(Boolean).join(' ') : G.q.explain);
+    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?'⚡ On the beat! Speed bonus +10¢.':'', G.combo>=3?`Combo ×${G.combo}! Bonus +10¢.`:''].filter(Boolean).join(' ') : G.q.explain, !first);
   } else if(G.tries===1){
     G.combo=0; SFX.wrong(); sceneReact(false); mochiMood(false); renderProg();
-    toast('Not quite! One more try 💪');
+    if(!(G.q.choices && G.q.choices.length<=2)) toast('Not quite! One more try 💪');
     if(G.q.input){ setTimeout(()=>{ G.cur=''; const d=$('disp'); if(d){ d.textContent=''; d.classList.add('empty'); } },500); }
     if(G.q.choices && G.q.choices.length<=2){ // two-option questions: no second guess
       G.tries=2; return answer(false, el); }
   } else {
     record(false); G.results.push(false); SFX.wrong(); mochiMood(false);
     document.querySelectorAll('.choice').forEach(b=>{ if(decodeURIComponent(b.dataset.v)===G.q.ans) b.classList.add('right'); });
-    showSheet(false,'Let\'s learn this one', `Answer: <b>${fh(G.q.ans)}</b>${G.q.unit&&!/[$%]/.test(G.q.ans)?' '+G.q.unit:''}<br>${G.q.explain}`);
+    showSheet(false,'Let\'s learn this one', `Answer: <b>${fh(G.q.ans)}</b>${G.q.unit&&!/[$%]/.test(G.q.ans)?' '+G.q.unit:''}<br>${G.q.explain}`, true);
   }
 }
 function grant(pts){
@@ -971,13 +1017,15 @@ function record(first){
   save();
 }
 let sheetOpen=false;
-function showSheet(good,h,e){
-  sheetOpen=true; const s=$('sheet'); s.className='sheet show '+(good?'good':'bad'); $('fbH').textContent=h; $('fbE').innerHTML=e||'';
+function showSheet(good,h,e,say){
+  sheetOpen=true; stopSpeech();
+  const sb=$('fbSay'); sb.style.display = (e && TTS.ok)? '' : 'none'; sb.onclick=()=>{ SFX.tap(); speak(h+'. '+(e||'')); };
+  if(say && S.settings.voice) speak(h+'. '+(e||'')); const s=$('sheet'); s.className='sheet show '+(good?'good':'bad'); $('fbH').textContent=h; $('fbE').innerHTML=e||'';
   const b=$('fbBtn'); b.className='btn '+(good?'good':'bad'); b.textContent='Continue';
   b.onclick=()=>{ SFX.tap(); advance(); };
   setTimeout(()=>b.focus({preventScroll:true}),50);
 }
-function hideSheet(){ sheetOpen=false; $('sheet').className='sheet'; }
+function hideSheet(){ stopSpeech(); sheetOpen=false; $('sheet').className='sheet'; }
 function advance(){
   hideSheet(); G.idx++;
   if(G.levelUp){ const msg=G.levelUp; G.levelUp=null; return celebrate('⬆️ Level up!',`<p style="font-size:20px">${msg}!<br>Questions get a little trickier now.</p>`,()=>advance2()); }
@@ -1134,11 +1182,11 @@ function renderParent(){
   $('pHist').innerHTML = S.payouts.length? S.payouts.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${p.points}</td><td>${money(p.dollars)}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts yet</td></tr>';
   $('pStats').innerHTML=['shop','potion','lab','stage'].map(k=>{ const w=S.worlds[k]; return `<tr><td>${GAMES[k].name}</td><td>${w.level}</td><td>${w.answered}</td><td>${w.answered?Math.round(w.firstTry/w.answered*100)+'%':'–'}</td></tr>`; }).join('');
   const t=today(); $('pDays').innerHTML=Array.from({length:7},(_,i)=>{ const d=dayOffset(t,-i), r=S.days[d]||{q:0,pts:0,goal:false}; return `<tr><td>${i===0?'Today':d}</td><td>${r.q}</td><td>${r.pts}</td><td>${r.goal?'✅':''}</td></tr>`; }).join('');
-  $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
+  $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.pointsPerDollar=num('sRate',1,100000,100); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
+  st.voice=$('sVoice').value==='1'; st.pointsPerDollar=num('sRate',1,100000,100); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
