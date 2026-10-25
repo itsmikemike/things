@@ -284,6 +284,9 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
 #fbSay{padding:12px 16px;font-size:16px}
 .mochi.talk .mouth{animation:talk .25s infinite alternate}
 @keyframes talk{from{height:4px}to{height:10px}}
+.modal{position:relative}
+.modal-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:#f4f1ff;font-size:18px;font-weight:700;z-index:2}
+.modal-x:active{transform:scale(.9)}
 </style>
 </head>
 <body>
@@ -375,8 +378,9 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     <div class="panel">
       <h2>⚙️ Settings</h2>
       <div class="two">
-        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 100. Each first-try correct answer earns 100 points ($1), a second-try correct answer earns 50¢, and combos and fast answers add 10¢. Set a daily max below if you want a ceiling.</small></label>
+        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 500, so each first-try correct answer (100 points) earns $0.20. Second-try correct answers earn half. Combos and fast answers add a few cents.</small></label>
         <label class="field">Daily goal (questions)<input id="sGoal" type="number" min="5" inputmode="numeric"><small>Meeting the goal keeps the streak and gives a bonus.</small></label>
+        <label class="field">Teacher voice<select id="sVoiceName"></select><small>★ = extra-natural voice. <button type="button" class="linkbtn" style="padding:2px 0;font-size:13px" onclick="testVoice()">▶ Test voice</button></small></label>
         <label class="field">Read explanations aloud<select id="sVoice"><option value="1">Yes, automatically when she misses one</option><option value="0">Only when she taps 🔊 Hear it</option></select><small>Uses the iPad or computer's built-in voice. Works offline.</small></label>
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
@@ -499,18 +503,18 @@ function genPotion(L){
   if(t==='equiv'){
     const d=R(2,9), n=R(1,d-1), k=R(2,6);
     return {tag:'Equivalent fractions', q:`Maomao's recipe scroll is smudged! Fill in the missing number:<br><b>${fh(n+'/'+d)} = ${fh('?/'+d*k)}</b>`, ans:String(n*k), input:true,
-      explain:`${d} × ${k} = ${d*k}, so multiply the top by ${k} too: ${n} × ${k} = <b>${n*k}</b>.`};
+      say:`Okay, let's fill in that smudge together. We start with ${n}/${d}, and we want the same amount with ${d*k} on the bottom. So ask yourself, what times ${d} gives ${d*k}? It's ${k}, because ${d} times ${k} is ${d*k}. Here's the big rule: whatever we do to the bottom, we have to do to the top. So we multiply the top by ${k} too. ${n} times ${k} is ${n*k}. The missing number is ${n*k}. ${n}/${d} and ${n*k}/${d*k} are the exact same amount, just cut into smaller pieces.`, explain:`${d} × ${k} = ${d*k}, so multiply the top by ${k} too: ${n} × ${k} = <b>${n*k}</b>.`};
   }
   if(t==='equiv2'){
     const d=R(3,9), n=coprime(d), k=R(2,7);
     return {tag:'Equivalent fractions', q:`Jinshi asks for a bigger batch of medicine. Find the missing denominator:<br><b>${fh(n+'/'+d)} = ${fh(n*k+'/?')}</b>`, ans:String(d*k), input:true,
-      explain:`${n} × ${k} = ${n*k}, so the bottom is ${d} × ${k} = <b>${d*k}</b>.`};
+      say:`Let's look at the tops first. We went from ${n} to ${n*k}. What did we multiply by? ${n} times ${k} is ${n*k}, so we multiplied by ${k}. To keep the fraction the same amount, the bottom has to be multiplied by ${k} too. ${d} times ${k} is ${d*k}. So the missing denominator is ${d*k}.`, explain:`${n} × ${k} = ${n*k}, so the bottom is ${d} × ${k} = <b>${d*k}</b>.`};
   }
   if(t==='simplify'){
     const d=R(3,10), n=coprime(d), k=R(2,6), a=F(n,d);
     return {tag:'Simplest form', q:`Write ${fh(n*k+'/'+d*k)} jar of ${herb} in <b>simplest form</b>.`, ans:a.str(false),
       choices:frChoices(a,[F(n,d*k),F(n*k,d),F(n+1,d),F(n,d+1),F(n*k/gcd(n*k,2)||1,d*k)],false),
-      explain:`Both ${n*k} and ${d*k} divide by ${k}: ${fh(n*k+'/'+d*k)} = <b>${fh(a.str(false))}</b>.`};
+      say:`To simplify a fraction, we look for the biggest number that divides evenly into both the top and the bottom. For ${n*k} and ${d*k}, that number is ${k}. ${n*k} divided by ${k} is ${n}, and ${d*k} divided by ${k} is ${d}. So ${n*k}/${d*k} simplifies to ${a.str(false)}. We know we're done when the top and bottom can't be divided by the same number anymore.`, explain:`Both ${n*k} and ${d*k} divide by ${k}: ${fh(n*k+'/'+d*k)} = <b>${fh(a.str(false))}</b>.`};
   }
   if(t==='compare'){
     let d1=R(3,10), d2=R(3,10); while(d2===d1) d2=R(3,10);
@@ -520,13 +524,13 @@ function genPotion(L){
     const L2=lcm(a.d,b.d);
     return {tag:'Compare fractions', q:`Maomao is tasting for poison! Which cup has <b>more</b> ${herb} tea?`, ans:big.str(false), choices:shuffle([a.str(false),b.str(false)]),
       vis:vialsSVG([a,b]),
-      explain:`Common denominator ${L2}: ${fh(a.n+'/'+a.d)} = ${fh(a.n*L2/a.d+'/'+L2)} and ${fh(b.n+'/'+b.d)} = ${fh(b.n*L2/b.d+'/'+L2)}. So <b>${fh(big.str(false))}</b> is more.`};
+      say:`Comparing fractions with different bottoms is tricky, because the pieces are different sizes. So let's make the bottoms match. A number that both ${a.d} and ${b.d} go into is ${L2}. ${a.str(false)} is the same as ${a.n*L2/a.d}/${L2}, and ${b.str(false)} is the same as ${b.n*L2/b.d}/${L2}. Now the pieces are the same size, so we just compare the tops: ${a.n*L2/a.d} and ${b.n*L2/b.d}. The bigger one wins, so ${big.str(false)} is more.`, explain:`Common denominator ${L2}: ${fh(a.n+'/'+a.d)} = ${fh(a.n*L2/a.d+'/'+L2)} and ${fh(b.n+'/'+b.d)} = ${fh(b.n*L2/b.d+'/'+L2)}. So <b>${fh(big.str(false))}</b> is more.`};
   }
   if(t==='ofwhole'){
     const d=pick([2,3,4,5,6,8,10]), w=d*R(2,9), n=R(1,d-1), ans=w/d*n;
     return {tag:'Fraction of a number', q:`Maomao has <b>${w}</b> ${herb} pieces and grinds ${fh(n+'/'+d)} of them. How many pieces is that?`, ans:String(ans),
       choices:numChoices(ans,[w/d, w-ans, ans+w/d, ans-w/d, n*d],4),
-      explain:`${w} ÷ ${d} = ${w/d}, then × ${n} = <b>${ans}</b>.`};
+      say:`To find a fraction of a number, we split it into equal groups first. The bottom number, ${d}, tells us how many groups to make. ${w} divided by ${d} is ${w/d}, so each group has ${w/d}. The top number, ${n}, tells us how many of those groups we take. ${n} groups of ${w/d} is ${ans}. So Maomao grinds ${ans} pieces.`, explain:`${w} ÷ ${d} = ${w/d}, then × ${n} = <b>${ans}</b>.`};
   }
   if(t==='addU'||t==='subU'){
     const ds=[2,3,4,5,6,8,10,12]; let d1=pick(ds), d2=pick(ds); while(d2===d1) d2=pick(ds);
@@ -540,14 +544,14 @@ function genPotion(L){
                        : `There's ${fh(a.str())} bottle of ${herb} tonic in the Rear Palace clinic. ${nm} takes ${fh(b.str())} bottle. How much is left?`;
     return {tag:isAdd?'Add fractions':'Subtract fractions', q:story, ans:r.str(),
       choices:frChoices(r,[wrong,F(r.n+1,r.d),F(Math.max(1,r.n-1),r.d),F(r.n,r.d+1), isAdd? null : a.add(b)]),
-      explain:`Use denominator ${L2}: ${fh(a.n*L2/a.d+'/'+L2)} ${isAdd?'+':'−'} ${fh(b.n*L2/b.d+'/'+L2)} = ${fh((isAdd? a.n*L2/a.d+b.n*L2/b.d : a.n*L2/a.d-b.n*L2/b.d)+'/'+L2)} = <b>${fh(r.str())}</b>.`};
+      say:`First, let's check the bottom numbers. We have ${a.d} and ${b.d}. They're different, so we can't ${isAdd?'add':'subtract'} yet. We need a common denominator, a number both of them go into evenly. ${L2} works! ${a.d===L2? a.str()+' already has '+L2+' on the bottom' : a.str()+' is the same as '+(a.n*L2/a.d)+'/'+L2}, and ${b.d===L2? b.str()+' already has '+L2+' on the bottom' : b.str()+' is the same as '+(b.n*L2/b.d)+'/'+L2}. Now we ${isAdd?'add':'subtract'} just the top numbers: ${a.n*L2/a.d} ${isAdd?'plus':'minus'} ${b.n*L2/b.d} is ${isAdd? a.n*L2/a.d+b.n*L2/b.d : a.n*L2/a.d-b.n*L2/b.d}. The bottom stays ${L2}, because the size of the pieces doesn't change.${r.str()!==((isAdd? a.n*L2/a.d+b.n*L2/b.d : a.n*L2/a.d-b.n*L2/b.d)+'/'+L2)? ' And that simplifies to '+r.str()+'.' : ''} Remember, we never ${isAdd?'add':'subtract'} the bottoms!`, explain:`Use denominator ${L2}: ${fh(a.n*L2/a.d+'/'+L2)} ${isAdd?'+':'−'} ${fh(b.n*L2/b.d+'/'+L2)} = ${fh((isAdd? a.n*L2/a.d+b.n*L2/b.d : a.n*L2/a.d-b.n*L2/b.d)+'/'+L2)} = <b>${fh(r.str())}</b>.`};
   }
   if(t==='mulW'||t==='word1'){
     const d=pick([2,3,4,5,6,8]), n=R(1,d-1), w=R(2,9), r=F(n*w,d);
     const q = t==='mulW'? `Each palace remedy needs ${fh(n+'/'+d)} spoon of ${herb}. How much for <b>${w}</b> remedies?`
                         : `${nm} brews ${w} cups of remedy. Each cup gets ${fh(n+'/'+d)} teaspoon of ${herb}. How many teaspoons in all?`;
     return {tag:'Multiply fractions', q, ans:r.str(), choices:frChoices(r,[F(n,d*w),F(n+w,d),F(n*w,d*w),F(n*w+1,d)]),
-      explain:`${fh(n+'/'+d)} × ${w} = ${fh(n*w+'/'+d)} = <b>${fh(r.str())}</b>.`};
+      say:`Multiplying a fraction by a whole number is like adding it again and again. We have ${w} groups of ${n}/${d}. So we multiply the top number: ${n} times ${w} is ${n*w}. The bottom stays ${d}, because the pieces are still the same size. That gives us ${n*w}/${d}.${r.str()!==(n*w+'/'+d)? ' We can write that as '+r.str()+'.' : ''}`, explain:`${fh(n+'/'+d)} × ${w} = ${fh(n*w+'/'+d)} = <b>${fh(r.str())}</b>.`};
   }
   if(t==='mixAdd'||t==='mixSub'||t==='word2'){
     const ds=[2,3,4,6,8]; const d1=pick(ds), d2=pick(ds);
@@ -561,26 +565,26 @@ function genPotion(L){
               : `The Rear Palace garden had ${fh(a.str())} rows of ${herb}. Bugs ate ${fh(b.str())} rows! How many rows are left?`)
       : `Mix it! <b>${fh(a.str())} ${isAdd?'+':'−'} ${fh(b.str())}</b> = ?`;
     return {tag:'Mixed numbers', q, ans:r.str(), choices:frChoices(r,[F(r.n+1,r.d),F(r.n-1,r.d),r.add(F(1,1)),r.sub(F(1,1)),isAdd?a.sub(b):a.add(b)]),
-      explain:`Rename as improper fractions: ${fh(a.str(false))} ${isAdd?'+':'−'} ${fh(b.str(false))} = <b>${fh(r.str())}</b>.`};
+      say:`Mixed numbers can look scary, but here's a way that always works. Turn each one into an improper fraction. ${a.str()} becomes ${a.str(false)}, and ${b.str()} becomes ${b.str(false)}. Next, make the bottoms match. Both go into ${lcm(a.d,b.d)}, so we get ${a.n*lcm(a.d,b.d)/a.d}/${lcm(a.d,b.d)} ${isAdd?'plus':'minus'} ${b.n*lcm(a.d,b.d)/b.d}/${lcm(a.d,b.d)}. ${isAdd?'Add':'Subtract'} the tops and we get ${isAdd? (a.n*lcm(a.d,b.d)/a.d+b.n*lcm(a.d,b.d)/b.d) : (a.n*lcm(a.d,b.d)/a.d-b.n*lcm(a.d,b.d)/b.d)}/${lcm(a.d,b.d)}. Finally, turn it back into a mixed number: ${r.str()}.`, explain:`Rename as improper fractions: ${fh(a.str(false))} ${isAdd?'+':'−'} ${fh(b.str(false))} = <b>${fh(r.str())}</b>.`};
   }
   if(t==='mulF'){
     const a=F(R(1,5),R(2,7)), b=F(R(1,5),R(2,7)); if(a.val()>=1||b.val()>=1) return genPotion(L);
     const r=a.mul(b);
     return {tag:'Multiply fractions', q:`${nm} uses ${fh(a.str())} of the ${fh(b.str())} jar of ${herb}. What fraction of a whole jar is that?`, ans:r.str(),
       choices:frChoices(r,[F(a.n+b.n,a.d+b.d),F(a.n*b.d,a.d*b.n),a.add(b),F(a.n*b.n,a.d+b.d)]),
-      explain:`"Of" means multiply: ${fh(a.n+'/'+a.d)} × ${fh(b.n+'/'+b.d)} = ${fh(a.n*b.n+'/'+a.d*b.d)} = <b>${fh(r.str())}</b>.`};
+      say:`Here's a secret: when you see the word of with fractions, it means multiply. To multiply fractions, we go straight across. Top times top: ${a.n} times ${b.n} is ${a.n*b.n}. Bottom times bottom: ${a.d} times ${b.d} is ${a.d*b.d}. So we get ${a.n*b.n}/${a.d*b.d}.${r.str()!==(a.n*b.n+'/'+a.d*b.d)? ' That simplifies to '+r.str()+'.' : ''} Notice the answer is smaller than both fractions. That makes sense, because we're taking part of a part!`, explain:`"Of" means multiply: ${fh(a.n+'/'+a.d)} × ${fh(b.n+'/'+b.d)} = ${fh(a.n*b.n+'/'+a.d*b.d)} = <b>${fh(r.str())}</b>.`};
   }
   if(t==='divU'){
     const d=pick([2,3,4,5,6,8]), w=R(2,8), ans=w*d;
     return {tag:'Divide by a fraction', q:`How many ${fh('1/'+d)}-cup scoops of ${herb} fit in <b>${w}</b> cups?`, ans:String(ans),
       choices:numChoices(ans,[w+d, w, d, ans+d, ans-w]),
-      explain:`Each cup holds ${d} scoops, so ${w} × ${d} = <b>${ans}</b>. (${w} ÷ ${fh('1/'+d)} = ${w} × ${d})`};
+      say:`Let's picture it. Each scoop is 1/${d} of a cup, so it takes ${d} scoops to fill one whole cup. If one cup holds ${d} scoops, then ${w} cups hold ${w} times ${d}, which is ${ans} scoops. That's why dividing by 1/${d} is the same as multiplying by ${d}.`, explain:`Each cup holds ${d} scoops, so ${w} × ${d} = <b>${ans}</b>. (${w} ÷ ${fh('1/'+d)} = ${w} × ${d})`};
   }
   // divF: fraction ÷ whole
   const d=pick([2,3,4,5]), n=1, w=R(2,5), r=F(n,d*w);
-  return {tag:'Divide fractions', q:`Maomao splits ${fh(n+'/'+d)} pot of ${herb} soup equally among <b>${w}</b> consorts. What part of the pot is does each consort get?`, ans:r.str(),
+  return {tag:'Divide fractions', q:`Maomao splits ${fh(n+'/'+d)} pot of ${herb} soup equally among <b>${w}</b> consorts. How much of the whole pot does each consort get?`, ans:r.str(),
     choices:frChoices(r,[F(w,d),F(n*w,d),F(d,w),F(1,d+w)]),
-    explain:`${fh('1/'+d)} ÷ ${w} = ${fh('1/'+d)} × ${fh('1/'+w)} = <b>${fh(r.str())}</b>.`};
+    say:`We're sharing 1/${d} of a pot between ${w} people. Splitting something into ${w} equal parts is the same as taking 1/${w} of it. So we multiply 1/${d} times 1/${w}. Top times top is 1, and bottom times bottom is ${d*w}. Each consort gets 1/${d*w} of the pot. That's a small bowl, which makes sense, because a little bit of soup is being shared by ${w} people.`, explain:`${fh('1/'+d)} ÷ ${w} = ${fh('1/'+d)} × ${fh('1/'+w)} = <b>${fh(r.str())}</b>.`};
 }
 
 function genStage(L){
@@ -649,30 +653,30 @@ function genLab(L){
   const t=pick(types);
   if(t==='perim'||t==='area'){ const w=R(3,15),h=R(2,12); const isA=t==='area', ans=isA? w*h : 2*(w+h);
     return {tag:isA?'Area':'Perimeter',q:`The base of Mark Rober's <b>${gadget}</b> is a ${w} ft by ${h} ft rectangle. What's its <b>${isA?'area':'perimeter'}</b>?`,ans:String(ans),choices:numChoices(ans,[isA?2*(w+h):w*h, w+h, isA? w*h+w : 2*w+h]),unit:isA?'sq ft':'ft',
-      vis:svgRect(w,h,isA),explain: isA? `Area = length × width = ${w} × ${h} = <b>${ans} sq ft</b>.` : `Perimeter = 2 × (${w} + ${h}) = <b>${ans} ft</b>.`}; }
-  if(t==='line'){ const a=R(25,155), ans=180-a; return {tag:'Angles',q:`Two arms of the ${gadget} make a straight line. One angle is <b>${a}°</b>. What's the other?`,ans:String(ans),choices:numChoices(ans,[90-a>0?90-a:a+10, 360-a, a]),vis:svgLine(a),explain:`Angles on a straight line add to 180°: 180 − ${a} = <b>${ans}°</b>.`}; }
+      vis:svgRect(w,h,isA),say:`${isA? `Area means how much space is inside a shape, like how many square tiles it would take to cover it. For a rectangle, we multiply the length by the width. ${w} times ${h} is ${ans}. Since we're counting squares, the answer is ${ans} square feet.` : `Perimeter is the distance all the way around the outside, like walking along the edges. A rectangle has two sides that are ${w} feet and two sides that are ${h} feet. ${w} plus ${h} is ${w+h}, and we have two of each, so ${w+h} times 2 is ${ans}. The perimeter is ${ans} feet.`}`, explain: isA? `Area = length × width = ${w} × ${h} = <b>${ans} sq ft</b>.` : `Perimeter = 2 × (${w} + ${h}) = <b>${ans} ft</b>.`}; }
+  if(t==='line'){ const a=R(25,155), ans=180-a; return {tag:'Angles',q:`Two arms of the ${gadget} make a straight line. One angle is <b>${a}°</b>. What's the other?`,ans:String(ans),choices:numChoices(ans,[90-a>0?90-a:a+10, 360-a, a]),vis:svgLine(a),say:`When two angles sit side by side on a straight line, they always add up to 180 degrees. A straight line is like half of a full turn. We know one angle is ${a} degrees, so we subtract to find the other: 180 minus ${a} is ${ans}. The missing angle is ${ans} degrees.`, explain:`Angles on a straight line add to 180°: 180 − ${a} = <b>${ans}°</b>.`}; }
   if(t==='conv'){ const opts=[['feet','inches',12],['yards','feet',3],['hours','minutes',60],['minutes','seconds',60],['gallons','quarts',4],['pounds','ounces',16]]; const [a,b,k]=pick(opts), n=R(2,9), ans=n*k;
-    return {tag:'Measurement',q:`The ${gadget} needs <b>${n} ${a}</b> of ${pick(['tape','string','time','track'])}. How many <b>${b}</b> is that?`,ans:String(ans),choices:numChoices(ans,[n+k,ans+k,ans-k,n*10]),explain:`1 ${a.replace(/s$/,'').replace('feet','foot')} = ${k} ${b}. ${n} × ${k} = <b>${ans}</b>.`}; }
+    return {tag:'Measurement',q:`The ${gadget} needs <b>${n} ${a}</b> of ${pick(['tape','string','time','track'])}. How many <b>${b}</b> is that?`,ans:String(ans),choices:numChoices(ans,[n+k,ans+k,ans-k,n*10]),say:`First, remember the conversion: one ${a.replace(/s$/,'').replace('feet','foot')} equals ${k} ${b}. We're going from a bigger unit to a smaller unit, so we'll end up with more of them. That means we multiply. ${n} times ${k} is ${ans}. So ${n} ${a} is ${ans} ${b}.`, explain:`1 ${a.replace(/s$/,'').replace('feet','foot')} = ${k} ${b}. ${n} × ${k} = <b>${ans}</b>.`}; }
   if(t==='conv2'){ const k=pick([[12,'inches','feet'],[3,'feet','yards'],[60,'minutes','hours']]); const n=R(2,8), tot=n*k[0];
-    return {tag:'Measurement',q:`You have <b>${tot} ${k[1]}</b> of track for the ${gadget}. How many <b>${k[2]}</b> is that?`,ans:String(n),choices:numChoices(n,[tot*k[0],n+1,tot-k[0]]),explain:`${tot} ÷ ${k[0]} = <b>${n}</b>.`}; }
-  if(t==='tri'){ let b=R(3,14),h=R(2,12); if((b*h)%2) b++; const ans=b*h/2; return {tag:'Triangle area',q:`A triangular fin for the ${gadget} has base <b>${b} cm</b> and height <b>${h} cm</b>. What's its area?`,ans:String(ans),unit:'sq cm',choices:numChoices(ans,[b*h,b+h,ans+b]),vis:svgTri(b,h),explain:`Area = ½ × base × height = ½ × ${b} × ${h} = <b>${ans} sq cm</b>.`}; }
+    return {tag:'Measurement',q:`You have <b>${tot} ${k[1]}</b> of track for the ${gadget}. How many <b>${k[2]}</b> is that?`,ans:String(n),choices:numChoices(n,[tot*k[0],n+1,tot-k[0]]),say:`This time we're going from a smaller unit to a bigger unit, so we'll end up with fewer of them. That means we divide. There are ${k[0]} ${k[1]} in one ${k[2].replace(/s$/,'').replace('feet','foot')}. ${tot} divided by ${k[0]} is ${n}. So we have ${n} ${k[2]}.`, explain:`${tot} ÷ ${k[0]} = <b>${n}</b>.`}; }
+  if(t==='tri'){ let b=R(3,14),h=R(2,12); if((b*h)%2) b++; const ans=b*h/2; return {tag:'Triangle area',q:`A triangular fin for the ${gadget} has base <b>${b} cm</b> and height <b>${h} cm</b>. What's its area?`,ans:String(ans),unit:'sq cm',choices:numChoices(ans,[b*h,b+h,ans+b]),vis:svgTri(b,h),say:`Here's something cool: a triangle is exactly half of a rectangle with the same base and height. So first, find the rectangle: ${b} times ${h} is ${b*h}. Then take half of it. Half of ${b*h} is ${ans}. The area of the triangle is ${ans} square centimeters.`, explain:`Area = ½ × base × height = ½ × ${b} × ${h} = <b>${ans} sq cm</b>.`}; }
   if(t==='vol'||t==='vol2'){ const l=R(2,10),w=R(2,8),h=R(2,6),ans=l*w*h;
-    if(t==='vol2'){ const base=l*w; return {tag:'Volume',q:`The ${gadget} box has a base area of <b>${base} sq in</b> and holds <b>${ans} cubic in</b>. How tall is it?`,ans:String(h),input:true,vis:svgBox(l,w,'?'),explain:`Volume = base × height, so height = ${ans} ÷ ${base} = <b>${h} in</b>.`}; }
-    return {tag:'Volume',q:`Mark's ${gadget} box is <b>${l}</b> in long, <b>${w}</b> in wide and <b>${h}</b> in tall. What's its volume?`,ans:String(ans),unit:'cu in',choices:numChoices(ans,[l+w+h,l*w+h,2*(l*w+w*h+l*h),l*w]),vis:svgBox(l,w,h),explain:`Volume = l × w × h = ${l} × ${w} × ${h} = <b>${ans} cubic inches</b>.`}; }
-  if(t==='triang'){ const a=R(30,90),b=R(20,150-a),ans=180-a-b; return {tag:'Triangle angles',q:`A triangle brace in the ${gadget} has angles <b>${a}°</b> and <b>${b}°</b>. What's the third angle?`,ans:String(ans),choices:numChoices(ans,[360-a-b,90-Math.min(a,b),a+b]),explain:`A triangle's angles add to 180°: 180 − ${a} − ${b} = <b>${ans}°</b>.`}; }
+    if(t==='vol2'){ const base=l*w; return {tag:'Volume',q:`The ${gadget} box has a base area of <b>${base} sq in</b> and holds <b>${ans} cubic in</b>. How tall is it?`,ans:String(h),input:true,vis:svgBox(l,w,'?'),say:`Volume is the base area times the height. We already know the base area is ${base}, and the volume is ${ans}. So we're asking, ${base} times what equals ${ans}? To find out, we divide. ${ans} divided by ${base} is ${h}. The box is ${h} inches tall.`, explain:`Volume = base × height, so height = ${ans} ÷ ${base} = <b>${h} in</b>.`}; }
+    return {tag:'Volume',q:`Mark's ${gadget} box is <b>${l}</b> in long, <b>${w}</b> in wide and <b>${h}</b> in tall. What's its volume?`,ans:String(ans),unit:'cu in',choices:numChoices(ans,[l+w+h,l*w+h,2*(l*w+w*h+l*h),l*w]),vis:svgBox(l,w,h),say:`Volume tells us how many little cubes would fit inside the box. We multiply length times width times height. ${l} times ${w} is ${l*w}. That's one layer of cubes on the bottom. Now we stack ${h} layers: ${l*w} times ${h} is ${ans}. The volume is ${ans} cubic inches.`, explain:`Volume = l × w × h = ${l} × ${w} × ${h} = <b>${ans} cubic inches</b>.`}; }
+  if(t==='triang'){ const a=R(30,90),b=R(20,150-a),ans=180-a-b; return {tag:'Triangle angles',q:`A triangle brace in the ${gadget} has angles <b>${a}°</b> and <b>${b}°</b>. What's the third angle?`,ans:String(ans),choices:numChoices(ans,[360-a-b,90-Math.min(a,b),a+b]),say:`Here's a rule worth remembering: the three angles inside any triangle always add up to 180 degrees. Let's add the two we know: ${a} plus ${b} is ${a+b}. Then subtract that from 180: 180 minus ${a+b} is ${ans}. The third angle is ${ans} degrees.`, explain:`A triangle's angles add to 180°: 180 − ${a} − ${b} = <b>${ans}°</b>.`}; }
   if(t==='mean'){ const n=pick([3,4,5]); let xs=Array.from({length:n},()=>R(2,20)); const s=xs.reduce((a,b)=>a+b,0), fix=(n-s%n)%n; xs[0]+=fix; const sum=s+fix, ans=sum/n;
-    return {tag:'Mean (average)',q:`Mark's test launches of the ${gadget} went <b>${xs.join(', ')}</b> meters. What's the <b>mean</b> distance?`,ans:String(ans),choices:numChoices(ans,[sum,Math.max(...xs)-Math.min(...xs),[...xs].sort((a,b)=>a-b)[Math.floor(n/2)]]),explain:`Add them: ${sum}. Divide by ${n}: ${sum} ÷ ${n} = <b>${ans}</b>.`}; }
+    return {tag:'Mean (average)',q:`Mark's test launches of the ${gadget} went <b>${xs.join(', ')}</b> meters. What's the <b>mean</b> distance?`,ans:String(ans),choices:numChoices(ans,[sum,Math.max(...xs)-Math.min(...xs),[...xs].sort((a,b)=>a-b)[Math.floor(n/2)]]),say:`The mean is the average. Think of it like sharing everything out evenly. First, add up all the numbers: ${xs.join(' plus ')} equals ${sum}. Then divide by how many numbers there are, which is ${n}. ${sum} divided by ${n} is ${ans}. So the mean is ${ans} meters.`, explain:`Add them: ${sum}. Divide by ${n}: ${sum} ÷ ${n} = <b>${ans}</b>.`}; }
   if(t==='median'){ const n=pick([5,7]); const xs=Array.from({length:n},()=>R(1,30)); const sorted=[...xs].sort((a,b)=>a-b), ans=sorted[(n-1)/2], mean=+(xs.reduce((a,b)=>a+b,0)/n).toFixed(1);
-    return {tag:'Median',q:`Seconds each marble took on the ${gadget}: <b>${xs.join(', ')}</b>. What's the <b>median</b>?`,ans:String(ans),choices:choices(String(ans),[String(xs[(n-1)/2]),String(mean),String(sorted[n-1]-sorted[0])],()=>String(ans+R(-4,4))),explain:`Put them in order: ${sorted.join(', ')}. The middle number is <b>${ans}</b>.`}; }
+    return {tag:'Median',q:`Seconds each marble took on the ${gadget}: <b>${xs.join(', ')}</b>. What's the <b>median</b>?`,ans:String(ans),choices:choices(String(ans),[String(xs[(n-1)/2]),String(mean),String(sorted[n-1]-sorted[0])],()=>String(ans+R(-4,4))),say:`The median is the middle number. The very first step is to put the numbers in order from smallest to largest: ${sorted.join(', ')}. Now find the one right in the middle. It's ${ans}. Careful, the median isn't the same as the average. It's just the middle one!`, explain:`Put them in order: ${sorted.join(', ')}. The middle number is <b>${ans}</b>.`}; }
   if(t==='cm'){ const m=R(11,99)/10, cm=Math.round(m*100); const up=pick([true,false]);
-    return up? {tag:'Metric',q:`The ${gadget} is <b>${fmtD(m)} meters</b> long. How many <b>centimeters</b>?`,ans:String(cm),choices:numChoices(cm,[cm/10,cm*10,m*10]),explain:`1 m = 100 cm. ${fmtD(m)} × 100 = <b>${cm}</b>.`}
-              : {tag:'Metric',q:`The ${gadget} is <b>${cm} cm</b> long. How many <b>meters</b>?`,ans:fmtD(m),choices:choices(fmtD(m),[fmtD(cm/10),fmtD(cm/1000),String(cm*100)],()=>fmtD(m+R(-5,5)/10)),explain:`100 cm = 1 m. ${cm} ÷ 100 = <b>${fmtD(m)}</b>.`}; }
-  if(t==='para'){ const b=R(4,15),h=R(3,10),ans=b*h; return {tag:'Parallelogram area',q:`A slanted ramp for the ${gadget} is a parallelogram with base <b>${b} ft</b> and height <b>${h} ft</b>. Area?`,ans:String(ans),unit:'sq ft',choices:numChoices(ans,[ans/2,2*(b+h),b+h]),vis:svgPara(b,h),explain:`Parallelogram area = base × height = ${b} × ${h} = <b>${ans} sq ft</b>.`}; }
-  if(t==='circ'){ const d=R(2,12),ans=fmtD(3.14*d); return {tag:'Circumference',q:`A wheel on the ${gadget} has diameter <b>${d} in</b>. Use π ≈ 3.14. What's the circumference?`,ans,unit:'in',choices:choices(ans,[fmtD(3.14*d*2),fmtD(3.14*d/2),fmtD(3.14*(d/2)**2),fmtD(3.14+d)],()=>fmtD(+ans+R(-9,9)/2)),vis:svgCircle(d,'d'),explain:`C = π × d = 3.14 × ${d} = <b>${ans} in</b>.`}; }
-  if(t==='carea'){ const r=R(1,6),ans=fmtD(3.14*r*r); return {tag:'Circle area',q:`A round solar panel on the ${gadget} has radius <b>${r} m</b>. Use π ≈ 3.14. What's its area?`,ans,unit:'sq m',choices:choices(ans,[fmtD(3.14*r*2),fmtD(3.14*r),fmtD(3.14*(2*r)**2)],()=>fmtD(+ans+R(-9,9))),vis:svgCircle(r,'r'),explain:`A = π × r × r = 3.14 × ${r} × ${r} = <b>${ans} sq m</b>.`}; }
+    return up? {tag:'Metric',q:`The ${gadget} is <b>${fmtD(m)} meters</b> long. How many <b>centimeters</b>?`,ans:String(cm),choices:numChoices(cm,[cm/10,cm*10,m*10]),say:`There are 100 centimeters in one meter. Going from meters to centimeters, we multiply by 100. A quick trick is to move the decimal point two places to the right. ${fmtD(m)} times 100 is ${cm}. So it's ${cm} centimeters.`, explain:`1 m = 100 cm. ${fmtD(m)} × 100 = <b>${cm}</b>.`}
+              : {tag:'Metric',q:`The ${gadget} is <b>${cm} cm</b> long. How many <b>meters</b>?`,ans:fmtD(m),choices:choices(fmtD(m),[fmtD(cm/10),fmtD(cm/1000),String(cm*100)],()=>fmtD(m+R(-5,5)/10)),say:`There are 100 centimeters in one meter. Going from centimeters to meters, we divide by 100. A quick trick is to move the decimal point two places to the left. ${cm} divided by 100 is ${fmtD(m)}. So it's ${fmtD(m)} meters.`, explain:`100 cm = 1 m. ${cm} ÷ 100 = <b>${fmtD(m)}</b>.`}; }
+  if(t==='para'){ const b=R(4,15),h=R(3,10),ans=b*h; return {tag:'Parallelogram area',q:`A slanted ramp for the ${gadget} is a parallelogram with base <b>${b} ft</b> and height <b>${h} ft</b>. Area?`,ans:String(ans),unit:'sq ft',choices:numChoices(ans,[ans/2,2*(b+h),b+h]),vis:svgPara(b,h),say:`A parallelogram is like a rectangle that got pushed over. If you cut off the slanted triangle on one end and slide it to the other end, it becomes a rectangle! So the area is base times height. ${b} times ${h} is ${ans} square feet. Just make sure you use the straight-up height, not the slanted side.`, explain:`Parallelogram area = base × height = ${b} × ${h} = <b>${ans} sq ft</b>.`}; }
+  if(t==='circ'){ const d=R(2,12),ans=fmtD(3.14*d); return {tag:'Circumference',q:`A wheel on the ${gadget} has diameter <b>${d} in</b>. Use π ≈ 3.14. What's the circumference?`,ans,unit:'in',choices:choices(ans,[fmtD(3.14*d*2),fmtD(3.14*d/2),fmtD(3.14*(d/2)**2),fmtD(3.14+d)],()=>fmtD(+ans+R(-9,9)/2)),vis:svgCircle(d,'d'),say:`The circumference is the distance all the way around a circle. The formula is pi times the diameter, and we're using 3.14 for pi. So we multiply 3.14 times ${d}. That gives us ${ans} inches.`, explain:`C = π × d = 3.14 × ${d} = <b>${ans} in</b>.`}; }
+  if(t==='carea'){ const r=R(1,6),ans=fmtD(3.14*r*r); return {tag:'Circle area',q:`A round solar panel on the ${gadget} has radius <b>${r} m</b>. Use π ≈ 3.14. What's its area?`,ans,unit:'sq m',choices:choices(ans,[fmtD(3.14*r*2),fmtD(3.14*r),fmtD(3.14*(2*r)**2)],()=>fmtD(+ans+R(-9,9))),vis:svgCircle(r,'r'),say:`To find the area of a circle, we use pi times the radius times the radius. The radius is ${r}, so ${r} times ${r} is ${r*r}. Then 3.14 times ${r*r} is ${ans}. The area is ${ans} square meters.`, explain:`A = π × r × r = 3.14 × ${r} × ${r} = <b>${ans} sq m</b>.`}; }
   // lshape
   const W=R(6,12),H=R(6,12),cw=R(2,W-3),ch=R(2,H-3),ans=W*H-cw*ch;
-  return {tag:'Composite area',q:`The ${gadget} floor is an L-shape: a <b>${W}×${H}</b> rectangle with a <b>${cw}×${ch}</b> corner cut out. What's the area?`,ans:String(ans),unit:'sq units',choices:numChoices(ans,[W*H,W*H+cw*ch,2*(W+H),ans-cw]),vis:svgL(W,H,cw,ch),explain:`Big rectangle ${W} × ${H} = ${W*H}. Cut-out ${cw} × ${ch} = ${cw*ch}. ${W*H} − ${cw*ch} = <b>${ans}</b>.`};
+  return {tag:'Composite area',q:`The ${gadget} floor is an L-shape: a <b>${W}×${H}</b> rectangle with a <b>${cw}×${ch}</b> corner cut out. What's the area?`,ans:String(ans),unit:'sq units',choices:numChoices(ans,[W*H,W*H+cw*ch,2*(W+H),ans-cw]),vis:svgL(W,H,cw,ch),say:`An L-shape looks tricky, so here's a smart move. Pretend the corner isn't cut out, and find the area of the big rectangle: ${W} times ${H} is ${W*H}. Then find the area of the missing corner: ${cw} times ${ch} is ${cw*ch}. Take away the missing piece: ${W*H} minus ${cw*ch} is ${ans}.`, explain:`Big rectangle ${W} × ${H} = ${W*H}. Cut-out ${cw} × ${ch} = ${cw*ch}. ${W*H} − ${cw*ch} = <b>${ans}</b>.`};
 }
 
 
@@ -684,15 +688,15 @@ function genMulFacts(L){
   const hi = L===1? 9 : 12;
   const a=R(2,hi), b=R(2,hi), p=a*b;
   if(t==='fact') return {tag:'Times tables',speed:6,q:`🎵 <i>${song}</i> — hit the note!<br><b>${a} × ${b}</b>`,ans:String(p),choices:numChoices(p,mulCands(a,b)),
-    explain:`${a} × ${b} = <b>${p}</b>. Tip: ${a} groups of ${b}. ${b>2?`Also ${a} × ${b-1} = ${a*(b-1)}, plus one more ${a} = ${p}.`:''}`};
+    say:`${a} times ${b} means ${a} groups of ${b}. ${b>2? `If that fact feels tricky, use one you already know. ${a} times ${b-1} is ${a*(b-1)}. Then add one more group of ${a}: ${a*(b-1)} plus ${a} is ${p}.` : `Times 2 is just doubling. Double ${a} is ${p}.`} So ${a} times ${b} is ${p}. Say it a couple of times in your head, so it sticks!`, explain:`${a} × ${b} = <b>${p}</b>. Tip: ${a} groups of ${b}. ${b>2?`Also ${a} × ${b-1} = ${a*(b-1)}, plus one more ${a} = ${p}.`:''}`};
   if(t==='miss') return {tag:'Missing factor',speed:8,q:`Miku's dancers line up in rows of <b>${a}</b>. There are <b>${p}</b> dancers. How many rows?<br><b>${a} × ? = ${p}</b>`,ans:String(b),choices:numChoices(b,[b+1,b-1,a,b+2,p-a],3),
-    explain:`${a} × ${b} = ${p}, so the missing number is <b>${b}</b>. (That's ${p} ÷ ${a}.)`};
-  if(t==='sq'){ const n=R(2,12); return {tag:'Square numbers',speed:6,q:`🎵 Encore! <b>${n} × ${n}</b>`,ans:String(n*n),choices:numChoices(n*n,[n*2,n*(n+1),n*(n-1),n*n+10]),explain:`${n} × ${n} = <b>${n*n}</b>. That's ${n} squared, ${n}<sup>2</sup>.`}; }
+    say:`We need to find what number times ${a} makes ${p}. That's the same as asking, what is ${p} divided by ${a}? Let's count by ${a}s: ${a}, ${2*a}, ${3*a}, and keep going until we reach ${p}. ${a} times ${b} is ${p}, so the missing number is ${b}. Multiplication and division are opposites, so they always help each other.`, explain:`${a} × ${b} = ${p}, so the missing number is <b>${b}</b>. (That's ${p} ÷ ${a}.)`};
+  if(t==='sq'){ const n=R(2,12); return {tag:'Square numbers',speed:6,q:`🎵 Encore! <b>${n} × ${n}</b>`,ans:String(n*n),choices:numChoices(n*n,[n*2,n*(n+1),n*(n-1),n*n+10]),say:`When you multiply a number by itself, it's called squaring it, because it makes a perfect square! Picture ${n} rows with ${n} dots in each row. ${n} times ${n} is ${n*n}. Square numbers are great to memorize.`, explain:`${n} × ${n} = <b>${n*n}</b>. That's ${n} squared, ${n}<sup>2</sup>.`}; }
   if(t==='tens'){ const x=R(2,9), y=R(2,9), z=x*10, ans=z*y; return {tag:'Multiplying by tens',speed:8,q:`<b>${y}</b> rows of <b>${z}</b> fans wave teal glow sticks. How many fans?<br><b>${z} × ${y}</b>`,ans:String(ans),choices:numChoices(ans,[x*y,ans*10,z+y,(x+1)*y*10]),
-    explain:`${x} × ${y} = ${x*y}, then add the zero: <b>${ans}</b>.`}; }
+    say:`Here's a shortcut for multiplying by tens. Cover up the zero for a moment and do ${x} times ${y}, which is ${x*y}. Now put the zero back on the end, and ${x*y} becomes ${ans}. That works because ${z} is ${x} tens, and ${x} tens times ${y} is ${x*y} tens.`, explain:`${x} × ${y} = ${x*y}, then add the zero: <b>${ans}</b>.`}; }
   const x=R(2,9), y=R(2,9), ans=x*100*y;
   return {tag:'Multiplying by hundreds',speed:8,q:`Each of <b>${y}</b> concert halls has <b>${x*100}</b> seats. How many seats in all?`,ans:String(ans),choices:numChoices(ans,[x*y*10,x*y,ans*10,x*100+y]),
-    explain:`${x} × ${y} = ${x*y}, then add two zeros: <b>${ans}</b>.`};
+    say:`Same trick as with tens, but now there are two zeros. First do ${x} times ${y}, which is ${x*y}. ${x*100} has two zeros, so we add two zeros to the end. That gives us ${ans} seats.`, explain:`${x} × ${y} = ${x*y}, then add two zeros: <b>${ans}</b>.`};
 }
 function genMulWords(L){
   const it=pick(ITEMS);
@@ -716,7 +720,11 @@ function genMulWords(L){
     : (a>=10 ? `Break it apart: ${a} × ${b} = ${a} × ${Math.floor(b/10)*10} + ${a} × ${b%10} = ${a*Math.floor(b/10)*10} + ${a*(b%10)} = <b>${fmt(p)}</b>.` : `${a} × ${b} = <b>${fmt(p)}</b>.`);
   const cands=[a*(b+1),a*(b-1),a+b,p+10,p-10,noCarry].concat(L>1? [p+100,p-100] : [(a+1)*b,(a-1)*b]);
   if(a>=10) cands.push(a*Math.floor(b/10)*10 + a%10*(b%10), Math.floor(a/10)*Math.floor(b/10)*100 + (a%10)*(b%10));
-  return {tag: L===1?'Multiplication':'Multi-digit multiplication', q, ans,
+  const say = a<10 && (b<10 || String(b).split('').filter(d=>d!=='0').length<2) ? `We have equal groups here, and whenever we have equal groups, we multiply. ${a} times ${b} is ${fmt(p)}. You can check it by skip counting by ${b}s, ${a} times.`
+    : a<10 ? (()=>{ const parts=String(b).split('').reverse().map((d,i)=>(+d)*10**i).filter(v=>v).reverse();
+        return `We have equal groups, so we multiply ${a} times ${b}. A great way to multiply a bigger number is to break it into parts. ${b} is ${parts.join(' plus ')}. Now multiply each part by ${a}: ${parts.map(v=>`${a} times ${v} is ${a*v}`).join(', and ')}. Then add the parts together: ${parts.map(v=>a*v).join(' plus ')} is ${fmt(p)}.`; })()
+    : (()=>{ const t=Math.floor(b/10)*10, o=b%10; return `This one has two big numbers, ${a} and ${b}, so let's break ${b} into tens and ones. ${b} is ${t}${o?' plus '+o:''}. First, ${a} times ${t}: ${a} times ${t/10} is ${a*t/10}, then add a zero to get ${a*t}.${o? ` Next, ${a} times ${o} is ${a*o}. Now add the two parts: ${a*t} plus ${a*o} is ${fmt(p)}.` : ` So the answer is ${fmt(p)}.`}`; })();
+  return {tag: L===1?'Multiplication':'Multi-digit multiplication', q, ans, say,
     choices: choices(ans, cands.filter(v=>v>0 && v!==p && Number.isInteger(v)).map(fmt), ()=>fmt(p+R(-9,9)*(L===1?1:10))), explain:ex};
 }
 
@@ -758,7 +766,7 @@ const LEGACY_GEN={shop:genShop, stage:genStage};
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:100,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true,voice:true},
+const DEFAULTS={ settings:{pointsPerDollar:500,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true,voice:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -767,6 +775,8 @@ function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S=
     const old=S.settings.pointsPerDollar||400; S.settings.pointsV2=1;
     if(old!==100){ S.unpaid=Math.round(S.unpaid*100/old); S.lifetime=Math.round(S.lifetime*100/old); for(const d of Object.values(S.days)) d.pts=Math.round(d.pts*100/old); for(const pay of S.payouts) pay.points=Math.round(pay.points*100/old); }
     S.settings.pointsPerDollar=100; if(S.settings.dailyCap) S.settings.dailyCap=Math.round(S.settings.dailyCap*100/old); }
+  if(!S.settings.pointsV3){ S.settings.pointsV3=1; // 2026-10-25: $0.20 per correct answer (500 points = $1); keep the jar's dollar value
+    const old=S.settings.pointsPerDollar||100; if(old===100){ S.unpaid*=5; S.lifetime*=5; for(const d of Object.values(S.days)) d.pts*=5; for(const pay of S.payouts) pay.points*=5; if(S.settings.dailyCap) S.settings.dailyCap*=5; S.settings.pointsPerDollar=500; } }
   if(!S.settings.lessonV2){ S.settings.lessonV2=1; S.settings.roundLen=12; S.settings.breakEvery=4; if(S.settings.dailyGoal===20) S.settings.dailyGoal=24; }
   S.settings.worldVideos ||= {};
   for(const g of ['potion','stage','shop','lab']) S.worlds[g]=Object.assign({level:1,answered:0,firstTry:0,recent:[]},S.worlds[g]||{}); }
@@ -810,11 +820,20 @@ const SFX={
    Read-aloud explanations (built-in Web Speech voice, no files)
    ========================================================= */
 const TTS={ok:'speechSynthesis' in window, voice:null};
-function pickVoice(){ if(!TTS.ok) return; const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)); if(!vs.length) return;
-  const pref=[/Samantha/i,/Ava/i,/Allison/i,/Google US English/i,/Aria/i,/Jenny/i,/Zira/i,/Karen/i,/Moira/i];
-  for(const r of pref){ const v=vs.find(v=>r.test(v.name) && /en[-_]US/i.test(v.lang)) || vs.find(v=>r.test(v.name)); if(v){ TTS.voice=v; return; } }
-  TTS.voice=vs.find(v=>/en[-_]US/i.test(v.lang))||vs[0]; }
-if(TTS.ok){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+// Score voices so the most natural one on the device wins: Premium/Enhanced (Apple), Natural/Online (Microsoft Edge), Google.
+const NOVELTY=/compact|eSpeak|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Jester|Organ|Trinoids|Whisper|Zarvox|Wobble|Superstar|Grandma|Grandpa|Rocko|Shelley|Sandy|Flo|Eddy|Reed|Fred|Junior|Ralph|Kathy|Good News/i;
+function voiceScore(v){ let sc=0;
+  if(/premium/i.test(v.name)) sc+=120; if(/enhanced|neural|natural/i.test(v.name)) sc+=100; if(/online/i.test(v.name)) sc+=40;
+  if(/en[-_]US/i.test(v.lang)) sc+=30; else if(/en[-_](GB|AU|CA|IE)/i.test(v.lang)) sc+=15;
+  if(/Ava|Zoe|Samantha|Jenny|Aria|Allison|Michelle|Emma|Evan|Nathan|Google US English/i.test(v.name)) sc+=25;
+  if(NOVELTY.test(v.name)) sc-=200; return sc; }
+function englishVoices(){ return TTS.ok? speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a)) : []; }
+function pickVoice(){ const vs=englishVoices(); if(!vs.length) return; const want=S.settings.voiceName;
+  TTS.voice = (want && vs.find(v=>v.name===want)) || vs[0]; }
+if(TTS.ok){ pickVoice(); speechSynthesis.onvoiceschanged=()=>{ pickVoice(); if($('parent').classList.contains('active')) fillVoiceList(); }; }
+function fillVoiceList(){ const sel=$('sVoiceName'); if(!sel) return; const vs=englishVoices();
+  sel.innerHTML='<option value="">Automatic (most natural available)</option>'+vs.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}">${v.name}${voiceScore(v)>=100?' ★':''}</option>`).join('');
+  sel.value=S.settings.voiceName||''; }
 const ORD={2:['half','halves'],3:['third','thirds'],4:['fourth','fourths'],5:['fifth','fifths'],6:['sixth','sixths'],7:['seventh','sevenths'],8:['eighth','eighths'],9:['ninth','ninths'],10:['tenth','tenths'],11:['eleventh','elevenths'],12:['twelfth','twelfths']};
 const ONES=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],
       TENS=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
@@ -838,11 +857,19 @@ function speakable(html){
 }
 function stopSpeech(){ if(TTS.ok) try{ speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.mochi.talk').forEach(m=>m.classList.remove('talk')); }
 function speak(html){
-  if(!TTS.ok) return; stopSpeech();
-  const u=new SpeechSynthesisUtterance(speakable(html)); if(TTS.voice) u.voice=TTS.voice; u.lang=(TTS.voice&&TTS.voice.lang)||'en-US'; u.rate=.92; u.pitch=1.05;
-  const m=$('sheetMochi'); u.onstart=()=>m&&m.classList.add('talk'); u.onend=u.onerror=()=>m&&m.classList.remove('talk');
-  speechSynthesis.speak(u);
+  if(!TTS.ok) return; stopSpeech(); pickVoice();
+  const text=speakable(html), parts=text.match(/[^.!?]+[.!?]*/g)||[text], m=$('sheetMochi');
+  const natural = TTS.voice && voiceScore(TTS.voice)>=100;
+  parts.map(x=>x.trim()).filter(Boolean).forEach((part,i,arr)=>{
+    const u=new SpeechSynthesisUtterance(part); if(TTS.voice){ u.voice=TTS.voice; u.lang=TTS.voice.lang; } else u.lang='en-US';
+    u.rate = natural? 1 : .94; u.pitch = 1;
+    if(i===0) u.onstart=()=>m&&m.classList.add('talk');
+    if(i===arr.length-1) u.onend=u.onerror=()=>m&&m.classList.remove('talk');
+    speechSynthesis.speak(u); });
 }
+const INTRO_MISS=["That one was tricky, so let's work through it together.","No worries! Let's figure this one out together.","Good try! Let's walk through it step by step.","Mistakes help our brains grow. Let's look at this one together."];
+const OUTRO_MISS=["Now you know how to do it!","You'll get the next one!","Keep that trick in your back pocket.","Nice listening. Let's keep going!"];
+function teacherScript(q){ return q.say || `Let's walk through it. ${q.explain}`; }
 
 /* =========================================================
    Confetti + bubbles
@@ -984,7 +1011,7 @@ function answer(ok, el){
     if(pts>0) { floatPts('+'+money(pts/S.settings.pointsPerDollar),el); setTimeout(SFX.coin,180); }
     sceneReact(true); mochiMood(true);
     const cheers = G.combo>=5? ['UNSTOPPABLE! 🔥','Fever mode! ✨','Legendary combo!'] : first? ['Awesome!','Nailed it!','Brilliant!','Perfect!','Sugoi! ✨','You got it!'] : ['Got it on the second try!','Nice recovery!'];
-    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?'⚡ On the beat! Speed bonus +10¢.':'', G.combo>=3?`Combo ×${G.combo}! Bonus +10¢.`:''].filter(Boolean).join(' ') : G.q.explain, !first);
+    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?`⚡ On the beat! Speed bonus +${money(10/S.settings.pointsPerDollar)}.`:'', G.combo>=3?`Combo ×${G.combo}! Bonus +${money(10/S.settings.pointsPerDollar)}.`:''].filter(Boolean).join(' ') : G.q.explain, first? {script:teacherScript(G.q)} : {auto:true, script:'Nice job fixing it! Here is why that works. '+teacherScript(G.q)});
   } else if(G.tries===1){
     G.combo=0; SFX.wrong(); sceneReact(false); mochiMood(false); renderProg();
     if(!(G.q.choices && G.q.choices.length<=2)) toast('Not quite! One more try 💪');
@@ -994,7 +1021,7 @@ function answer(ok, el){
   } else {
     record(false); G.results.push(false); SFX.wrong(); mochiMood(false);
     document.querySelectorAll('.choice').forEach(b=>{ if(decodeURIComponent(b.dataset.v)===G.q.ans) b.classList.add('right'); });
-    showSheet(false,'Let\'s learn this one', `Answer: <b>${fh(G.q.ans)}</b>${G.q.unit&&!/[$%]/.test(G.q.ans)?' '+G.q.unit:''}<br>${G.q.explain}`, true);
+    showSheet(false,'Let\'s learn this one', `Answer: <b>${fh(G.q.ans)}</b>${G.q.unit&&!/[$%]/.test(G.q.ans)?' '+G.q.unit:''}<br>${G.q.explain}`, {auto:true, script:`${pick(INTRO_MISS)} ${teacherScript(G.q)} ${pick(OUTRO_MISS)}`});
   }
 }
 function grant(pts){
@@ -1017,10 +1044,11 @@ function record(first){
   save();
 }
 let sheetOpen=false;
-function showSheet(good,h,e,say){
+function showSheet(good,h,e,voice){
   sheetOpen=true; stopSpeech();
-  const sb=$('fbSay'); sb.style.display = (e && TTS.ok)? '' : 'none'; sb.onclick=()=>{ SFX.tap(); speak(h+'. '+(e||'')); };
-  if(say && S.settings.voice) speak(h+'. '+(e||'')); const s=$('sheet'); s.className='sheet show '+(good?'good':'bad'); $('fbH').textContent=h; $('fbE').innerHTML=e||'';
+  const script = voice&&voice.script || (e? h+'. '+e : '');
+  const sb=$('fbSay'); sb.style.display = (script && TTS.ok)? '' : 'none'; sb.onclick=()=>{ SFX.tap(); speak(script); };
+  if(voice && voice.auto && S.settings.voice) speak(script); const s=$('sheet'); s.className='sheet show '+(good?'good':'bad'); $('fbH').textContent=h; $('fbE').innerHTML=e||'';
   const b=$('fbBtn'); b.className='btn '+(good?'good':'bad'); b.textContent='Continue';
   b.onclick=()=>{ SFX.tap(); advance(); };
   setTimeout(()=>b.focus({preventScroll:true}),50);
@@ -1077,12 +1105,12 @@ function takeBreak(next){
   SFX.fanfare(); confetti(100);
   const w=G.qWorld, cap=(S.settings.maxVideoMin||0)*60, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
   const src=srcs.length? pick(srcs) : null;
-  openModal(`<h2>📺 Break time!</h2><div class="note-s" style="text-align:center;margin-bottom:8px">Video from ${WORLD_LABEL[w]}</div>
+  openModal(`<button class="modal-x" id="mX" aria-label="Close video">✕</button><h2>📺 Break time!</h2><div class="note-s" style="text-align:center;margin-bottom:8px">Video from ${WORLD_LABEL[w]}</div>
     <div class="vidwrap ${src&&src.short?'short':''}"><div id="ytp"></div><div class="vidmsg" id="vmsg">Loading video…</div></div>
-    <div class="timer" id="btime">&nbsp;</div><button class="btn" id="mOk" disabled>Back to math after the video</button>`);
-  let watched=0, playing=false, waited=0, over=false; const mmss=t=>{ t=Math.max(0,Math.round(t)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
+    <div class="timer" id="btime">&nbsp;</div><div class="row" style="justify-content:center;margin-top:0"><button class="btn soft" id="mSkip">Skip ⏭</button><button class="btn" id="mOk" disabled>Back to math after the video</button></div>`);
+  let watched=0, playing=false, waited=0, over=false, firstVid=null; const mmss=t=>{ t=Math.max(0,Math.round(t)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
   const btn=()=>$('mOk'), msg=t=>{ const m=$('vmsg'); if(m){ m.textContent=t; m.style.display=t?'block':'none'; } };
-  const finish=(text)=>{ if(over) return; over=true; clearInterval(brkTimer); const b=btn(); if(!b) return; b.disabled=false; b.textContent='Back to math! ➜';
+  const finish=(text)=>{ if(over) return; over=true; clearInterval(brkTimer); const b=btn(); if(!b) return; b.disabled=false; b.textContent='Back to math! ➜'; const sk=$('mSkip'); if(sk) sk.style.display='none';
     $('btime').textContent=text||"Time's up!"; try{ ytPlayer&&ytPlayer.stopVideo(); }catch(e){} SFX.coin(); };
   clearInterval(brkTimer);
   brkTimer=setInterval(()=>{ if(!btn()){ clearInterval(brkTimer); return; }
@@ -1099,7 +1127,12 @@ function takeBreak(next){
         onReady:e=>{ if(s.list){ let n=0; const tryPick=()=>{ let pl=null; try{ pl=e.target.getPlaylist(); }catch(_){}
               if(pl&&pl.length){ e.target.playVideoAt(R(0,Math.min(pl.length,25)-1)); } else if(n++<8) setTimeout(tryPick,300); else e.target.playVideo(); }; tryPick(); }
           else e.target.playVideo(); },
-        onStateChange:e=>{ playing = e.data===YT.PlayerState.PLAYING; if(playing) msg(''); if(e.data===YT.PlayerState.ENDED && !over) finish('That was fun! 🎉'); },
+        onStateChange:e=>{ if(over){ if(e.data===YT.PlayerState.PLAYING) try{ e.target.stopVideo(); }catch(_){} return; }
+          playing = e.data===YT.PlayerState.PLAYING; if(playing) msg('');
+          // one video per break: stop if the playlist moves on to another video
+          let vid=null; try{ vid=e.target.getVideoData().video_id; }catch(_){}
+          if(playing && vid){ if(!firstVid) firstVid=vid; else if(vid!==firstVid) return finish('That was fun! 🎉'); }
+          if(e.data===YT.PlayerState.ENDED) finish('That was fun! 🎉'); },
         onError:e=>{ const code=e&&e.data; lastErr=code;
           const retry=f=>{ try{ ytPlayer.destroy(); }catch(_){} const v=document.querySelector('.vidwrap'); if(v && !$('ytp')) v.insertAdjacentHTML('afterbegin','<div id="ytp"></div>'); make(f); };
           if(s.fallback) retry({list:s.fallback,short:s.short,plainHost:s.plainHost});
@@ -1112,8 +1145,10 @@ function takeBreak(next){
   if(location.protocol==='file:'){ msg('Videos only play from the website link (GitHub Pages), not from a downloaded file.'); finish('Stretch break!'); }
   else if(!src){ msg('No videos are set up for this world.'); finish('Stretch break!'); }
   else loadYT().then(()=>{ if($('ytp')) make(src); }).catch(()=>{ msg('YouTube didn\'t load. 😅 Take a quick stretch!'); finish('Stretch break!'); });
-  btn().onclick=()=>{ clearInterval(brkTimer); try{ ytPlayer&&ytPlayer.destroy(); }catch(e){} ytPlayer=null; closeModal(); next(); };
+  const leave=()=>{ over=true; clearInterval(brkTimer); try{ ytPlayer&&ytPlayer.destroy(); }catch(e){} ytPlayer=null; closeModal(); next(); };
+  btn().onclick=leave; $('mSkip').onclick=()=>{ SFX.tap(); leave(); }; $('mX').onclick=()=>{ SFX.tap(); leave(); };
 }
+function testVoice(){ S.settings.voiceName=$('sVoiceName').value; pickVoice(); speak("Hi! I'm your math helper. When a problem is tricky, I'll walk you through it step by step. For example, 3/4 plus 1/8. The bottoms are different, so we change 3/4 into 6/8. Then 6/8 plus 1/8 is 7/8."); }
 function testVideo(w){ saveSettings(); const saved=G; G={qWorld:w}; takeBreak(()=>{ G=saved; }); }
 function finishRound(){
   const correct=G.results.filter(Boolean).length, pct=correct/G.total, stars= pct>=.9?3 : pct>=.7?2 : pct>=.4?1 : 0;
@@ -1182,11 +1217,11 @@ function renderParent(){
   $('pHist').innerHTML = S.payouts.length? S.payouts.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${p.points}</td><td>${money(p.dollars)}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts yet</td></tr>';
   $('pStats').innerHTML=['shop','potion','lab','stage'].map(k=>{ const w=S.worlds[k]; return `<tr><td>${GAMES[k].name}</td><td>${w.level}</td><td>${w.answered}</td><td>${w.answered?Math.round(w.firstTry/w.answered*100)+'%':'–'}</td></tr>`; }).join('');
   const t=today(); $('pDays').innerHTML=Array.from({length:7},(_,i)=>{ const d=dayOffset(t,-i), r=S.days[d]||{q:0,pts:0,goal:false}; return `<tr><td>${i===0?'Today':d}</td><td>${r.q}</td><td>${r.pts}</td><td>${r.goal?'✅':''}</td></tr>`; }).join('');
-  $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
+  fillVoiceList(); $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.voice=$('sVoice').value==='1'; st.pointsPerDollar=num('sRate',1,100000,100); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
+  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,500); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
