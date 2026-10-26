@@ -16,7 +16,7 @@
 <!--
   Mochi Math Quest - a single-file math practice game.
   All art is CSS / emoji. All sound effects are synthesized live with the Web Audio API
-  (no audio files, so nothing to license). Optional break videos are YouTube embeds
+  (no audio files, so nothing to license). Breaks are original animated skits; optional break videos are YouTube embeds
   chosen by the parent and played through youtube-nocookie.com.
   Progress is saved in this browser's localStorage.
 -->
@@ -208,6 +208,44 @@ sup{font-size:.6em}
 .timer{font-size:20px;font-weight:700;margin:12px 0}
 .bigsq{font-size:110px;display:inline-block;margin:10px;transition:transform .12s;cursor:pointer}
 .bigsq:active,.bigsq.press{transform:scale(1.35,.6)}
+.sqdrop{position:fixed;inset:0;z-index:65;display:grid;place-items:center;pointer-events:none}
+.sqdrop .card{pointer-events:auto;cursor:pointer;background:#fff;border-radius:28px;padding:20px 34px;text-align:center;box-shadow:var(--shadow);animation:popIn .45s cubic-bezier(.2,.9,.3,1.4);min-width:220px}
+.sqdrop .gift{font-size:70px;display:inline-block;animation:wob .45s ease-in-out 2}
+.sqdrop .e{font-size:90px;display:inline-block;animation:squish 1.2s ease-in-out infinite;transform-origin:50% 100%}
+.sqdrop .t{font-weight:700;color:#7c5cff;font-size:18px;margin-top:4px}
+.sqdrop b{display:block;font-size:22px;color:#2d2350}
+.sqdrop .c{color:var(--muted);font-size:14px;margin-top:4px}
+.sqdrop.rare .card{background:linear-gradient(#fff9e0,#ffe6a1);box-shadow:0 0 0 4px #ffcf4a,var(--shadow)}
+@keyframes wob{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.05)}75%{transform:rotate(14deg) scale(1.05)}}
+.dlg{z-index:90}
+.dlg .modal{max-width:520px}
+.dlg textarea{width:100%;min-height:120px;font:13px ui-monospace,Menlo,monospace;border:2px solid #e3dcff;border-radius:14px;padding:10px;margin:10px 0;color:var(--ink);background:#faf8ff;-webkit-user-select:text;user-select:text}
+.dlg input{width:100%;font:inherit;font-size:20px;border:2px solid #e3dcff;border-radius:14px;padding:10px;margin:10px 0;text-align:center;color:var(--ink);background:#fff}
+.skit{position:relative;width:min(100%,calc(58vh*1.6));aspect-ratio:16/10;margin:0 auto;border-radius:18px;overflow:hidden;background:#cfe8ff;-webkit-user-select:none;user-select:none}
+.skit .act{position:absolute;transform:translate(-50%,-100%);line-height:1;white-space:nowrap}
+.skit .act .in{transform-origin:50% 100%}
+.skit .act .ct{display:inline-block;line-height:1}
+.skit .gnd{position:absolute;left:0;right:0;bottom:0;height:12%;z-index:1}
+.skit .sbub{position:absolute;transform:translate(-50%,-100%);z-index:10;background:#fff;color:#2d2350;border-radius:16px;padding:6px 12px;font-weight:600;font-size:clamp(13px,2.4vw,19px);box-shadow:0 3px 0 rgba(0,0,0,.12);animation:popIn .25s;width:max-content;max-width:min(60%,340px);white-space:normal;text-align:center}
+.skit .sbub::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+.skit .sbub.big{font-size:clamp(18px,4vw,30px);font-weight:700}
+.skit .cap{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:12;background:rgba(45,35,80,.82);color:#fff;border-radius:18px;padding:10px 18px;font-weight:700;font-size:clamp(15px,3vw,24px);text-align:center;width:max-content;max-width:86%;animation:popIn .3s}
+.skit .cap.ttl{background:#fff;color:#7c5cff;top:20%;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.skit .cap.count{background:none;font-size:clamp(60px,14vw,120px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25)}
+.skit .flash{position:absolute;inset:0;z-index:11;animation:flashOut .7s forwards}
+@keyframes flashOut{from{opacity:1}to{opacity:0}}
+.skit .spot{position:absolute;left:50%;top:50%;width:300%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 0 200vmax rgba(8,2,24,.84);pointer-events:none;z-index:-1}
+.skit .hud{position:absolute;left:10px;top:8px;z-index:8;color:#fff;font-size:clamp(11px,1.8vw,14px);font-weight:700;font-family:ui-monospace,Menlo,monospace}
+.skit .hud span{margin-left:8px;opacity:.8}
+.skit .shelf{position:absolute;left:6%;right:6%;top:10%;border-bottom:8px solid #8a5a32;font-size:clamp(20px,4vw,34px);letter-spacing:.4em;text-align:center;z-index:1}
+.skit .pot .liq{position:absolute;left:8%;right:8%;top:0;height:22%;border-radius:50%;background:#7fd6ff;transition:background .4s}
+.skit .pot{position:relative;width:1em;height:.62em;background:#3b3355;border-radius:12% 12% 50% 50%;box-shadow:inset -.06em -.06em 0 #2a2340}
+.skit .board{position:absolute;right:4%;top:8%;z-index:1;background:#fff;color:#2d2350;border:3px solid #2f6ee8;border-radius:10px;padding:6px 10px;font-size:clamp(11px,1.9vw,15px);font-weight:600;line-height:1.35;transform:rotate(3deg)}
+.skit .beam{position:absolute;top:-10%;width:30%;height:110%;background:linear-gradient(rgba(57,197,187,.45),rgba(57,197,187,0));clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);z-index:1;animation:sway 2.4s ease-in-out infinite alternate}
+.skit .beam.l{left:8%;transform-origin:50% 0}.skit .beam.r{right:8%;transform-origin:50% 0;animation-delay:-1.2s}
+@keyframes sway{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.skit .crowd{position:absolute;left:0;right:0;bottom:1%;z-index:5;text-align:center;font-size:clamp(18px,3.6vw,30px);letter-spacing:.3em;animation:squish 1s ease-in-out infinite}
+.skit .table{position:absolute;left:52%;width:24%;top:74%;height:14%;background:#2d2350;border-radius:6px 6px 0 0;z-index:1}
 .newsq{display:flex;align-items:center;gap:12px;justify-content:center;background:#fff4fb;border-radius:18px;padding:10px;margin:10px 0}
 .stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
 .stats3 div{background:#f5f2ff;border-radius:16px;padding:12px 6px;font-size:14px;color:var(--muted)}
@@ -222,8 +260,14 @@ sup{font-size:.6em}
 .sqcell{background:#fff;border-radius:18px;padding:10px 4px;text-align:center;font-size:13px;box-shadow:0 3px 0 #eee}
 .sqcell .e{font-size:42px;display:block;transition:transform .15s}
 .sqcell:active .e{transform:scale(1.3,.7)}
-.sqcell.locked .e{filter:grayscale(1) brightness(1.7);opacity:.35}
-.sqcell.rare{background:linear-gradient(135deg,#fff8d6,#ffe3f3)}
+.sqcell.locked .e{filter:brightness(0);opacity:.13}
+.sqcell{border:2px solid transparent}
+.sqcell .tr{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.sqcell.t4:not(.locked){animation:shine 2.4s ease-in-out infinite}
+@keyframes shine{50%{box-shadow:0 0 0 3px #ffd34d,0 0 18px #ffd34d}}
+.sqtiers{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:4px 0 12px}
+.sqtiers span{font-weight:700}
+.sqdrop .tier{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;border-radius:999px;padding:3px 10px;margin-top:6px}
 .jar{display:flex;align-items:center;gap:14px}
 .jar .e{font-size:54px}
 .jar b{font-size:34px}
@@ -303,7 +347,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
   <section id="home" class="screen active">
     <header class="hbar">
       <div class="mochi sm" id="heroMochi"><div class="body"></div><span class="leaf">🌱</span><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div>
-      <div class="htitle"><h1>Mochi Math Quest</h1><p id="greet">Pick a world! Every 4 answers earns a video break.</p></div>
+      <div class="htitle"><h1>Mochi Math Quest</h1><p id="greet">Pick a world! Every 4 answers earns a break.</p></div>
       <div class="hstats">
         <div class="chip" title="Points"><span class="ico">💎</span><span id="hPts">0</span></div>
         <div class="chip money" title="Allowance earned"><span class="ico">🫙</span><span id="hMoney">$0.00</span></div>
@@ -353,8 +397,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     </div>
     <div class="panel">
       <h2>Squishy Collection <span id="cCount" style="color:var(--muted);font-size:18px"></span></h2>
-      <p class="note-s">Earn a new squishy at the end of every lesson. Golden ones are rare! Tap one to squish it.</p>
-      <div class="sqgrid" id="sqgrid"></div>
+      <p class="note-s">Earn a squishy at the end of every lesson, plus surprise drops for 5 and 10 in a row and lucky answers. Each one has a rarity, from Common to Legendary. Daily Mix gives better odds. Tap one to squish it.</p>
+      <div class="sqtiers" id="sqtiers"></div><div class="sqgrid" id="sqgrid"></div>
     </div>
   </section>
 
@@ -389,10 +433,13 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
         <label class="field">Read explanations aloud<select id="sVoice"><option value="1">Yes, automatically when she misses one</option><option value="0">Only when she taps 🔊 Hear it</option></select><small>Uses the iPad or computer's built-in voice. Works offline.</small></label>
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
-        <label class="field">Video break every N questions<input id="sEvery" type="number" min="2" max="20" inputmode="numeric"><small>Default 4, so a 12-question lesson has 3 video breaks (the last one comes right before the results).</small></label>
+        <label class="field">Break every N questions<input id="sEvery" type="number" min="2" max="20" inputmode="numeric"><small>Default 4, so a 12-question lesson has 3 breaks (the last one comes right before the results).</small></label>
+        <label class="field">Breaks show<select id="sBreak"><option value="skits">Animated skits (built in, always kid-safe)</option><option value="videos">YouTube videos from each world</option><option value="both">A mix of both</option></select><small>Skits are short original cartoons that work anywhere, even offline.</small></label>
         <label class="field">Longest a break video can run (minutes)<input id="sMax" type="number" min="0" max="60" inputmode="numeric"><small>0 = no limit, so every video plays to the end. If you set a limit, longer videos stop there.</small></label>
         <label class="field">Change PIN<input id="sPin" type="text" inputmode="numeric" maxlength="6" placeholder="leave blank to keep"></label>
       </div>
+      <h3 style="text-align:left;margin:6px 0">🎬 Animated skits</h3>
+      <div class="row" style="margin:0 0 12px"><button class="btn soft" onclick="testSkit()">▶ Play a random skit</button></div>
       <h3 style="text-align:left;margin:6px 0">📺 Break videos for each world</h3>
       <p class="note-s">Each break plays a random recent Short from the world she was just playing. These start with each official channel. You can replace them with your own picks, one per line: a Short or video link, a playlist link, or a channel ID (UC…). Leave a box empty to go back to the default.</p>
       <div class="two">
@@ -407,8 +454,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     </div>
     <div class="panel">
       <h2>💾 Backup</h2>
-      <p class="note-s">Progress is saved in this browser only. iPad and laptop keep separate progress, so pick one as the "home" device or move progress with a backup file.</p>
-      <div class="row"><button class="btn soft" onclick="exportData()">Download backup</button><button class="btn soft" onclick="document.getElementById('imp').click()">Restore backup</button><button class="btn bad" onclick="resetAll()">Reset everything</button></div>
+      <p class="note-s">Progress is saved in this browser only. iPad and laptop keep separate progress, so pick one as the "home" device or move progress with a backup.</p>
+      <div class="row"><button class="btn soft" onclick="exportData()">Back up progress</button><button class="btn soft" onclick="restoreData()">Restore backup</button><button class="btn bad" onclick="resetAll()">Reset everything</button></div>
       <input type="file" id="imp" accept=".json,application/json" style="display:none" onchange="importData(this)">
       <p class="note-s" style="margin-top:14px">Sound effects are synthesized in the browser with the Web Audio API, so there are no audio files and nothing to license. Fonts: Fredoka (SIL Open Font License) via Google Fonts. Emoji are drawn by her device. Home-screen photos were supplied by the parent.<br>This is a fan-made learning game for home use. It isn't affiliated with LaurenZside, The Apothecary Diaries, Mark Rober, or Crypton Future Media (Hatsune Miku), and it uses no official images.</p>
     </div>
@@ -416,6 +463,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
 </div>
 
 <div class="sheet" id="sheet"><div class="in"><div class="mochi" id="sheetMochi" style="transform:scale(.8)"><div class="body"></div><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div><div class="msg"><h3 id="fbH"></h3><div class="exp" id="fbE"></div></div><button class="btn soft" id="fbSay" aria-label="Hear the explanation">🔊 Mrs. Calder</button><button class="btn" id="fbBtn">Continue</button></div></div>
+<div class="overlay dlg" id="dlg"><div class="modal" id="dlgBox"></div></div>
 <div class="overlay" id="ov"><div class="modal" id="modal"></div></div>
 
 <script>
@@ -813,7 +861,7 @@ const LEGACY_GEN={shop:genShop, stage:genStage};
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:500,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,worldVideos:{},pin:'1234',sound:true,voice:true},
+const DEFAULTS={ settings:{pointsPerDollar:500,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,breakType:'skits',worldVideos:{},pin:'1234',sound:true,voice:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -938,6 +986,17 @@ function teacherScript(q){ if(q._script) return q._script; // same explanation i
   const ways=[q.say,...(q.alt||[])].filter(Boolean); if(!ways.length) return q._script=`Let's walk through it. ${q.explain}`;
   return q._script=fresh(ways,'way:'+q.tag); }
 
+// Surprise squishy during a lesson: combo prizes at 5 and 10 in a row, plus a small lucky chance (max 3 per lesson)
+function squishyDrop(combo){ if(!G || G.drops>=3) return; const sq=awardSquishy(G.world==='mix'); if(!sq) return;
+  G.drops++; G.squishiesWon.push(sq);
+  const d=document.createElement('div'); d.className='sqdrop'+(sq[2]>=3?' rare':'');
+  d.innerHTML=`<div class="card"><div class="gift">🎁</div><div class="t">${combo? combo+' in a row! Combo prize!' : 'Lucky drop!'}</div></div>`;
+  document.body.appendChild(d); SFX.bubble();
+  setTimeout(()=>{ if(!d.isConnected) return; d.querySelector('.card').innerHTML=`<div class="e">${sq[0]}</div><div class="t">${sq[2]===4?'✨ LEGENDARY! ✨':sq[2]===3?'Whoa, an Epic one!':'New squishy!'}</div><b>${sq[1]}</b><span class="tier" style="background:${TIERS[sq[2]].col}">${TIERS[sq[2]].name}</span><div class="c">${new Set(S.squishies).size}/${SQUISHIES.length} collected</div>`;
+    SFX.squish(); if(sq[2]>=3) SFX.fanfare(); confetti(sq[2]>=3?160:sq[2]===2?90:60); },900);
+  const close=()=>{ if(!d.isConnected) return; d.style.transition='opacity .3s'; d.style.opacity=0; setTimeout(()=>d.remove(),300); };
+  d.onclick=close; setTimeout(close,3800); }
+
 /* =========================================================
    Confetti + bubbles
    ========================================================= */
@@ -960,16 +1019,26 @@ function toast(msg){ const t=document.createElement('div'); t.className='toast';
 /* =========================================================
    Squishy collectibles (original designs, emoji-based)
    ========================================================= */
+// [emoji, name, tier]. Keep the order: saved collections store these positions. Add new ones at the end.
 const SQUISHIES=[
- ['🍡','Dango Trio'],['🍓','Berry Mochi'],['🐱','Neko Bun'],['🍑','Peach Puff'],['🐻','Honey Bear'],['🐰','Bunny Loaf'],['🐼','Panda Dumpling'],['🐸','Froggy Jelly'],
- ['🍩','Sprinkle Donut'],['🧁','Cupcake Cloud'],['🍰','Strawberry Shortcake'],['🐧','Penguin Pudding'],['🦊','Fox Taiyaki'],['🐹','Hamster Mochi'],['🐙','Octo Squish'],['🐳','Whale Marshmallow'],
- ['🍙','Rice Ball Buddy'],['🥟','Gyoza Pal'],['🍋','Lemon Drop'],['🍉','Melon Slice'],['🥐','Croissant Snooze'],['🍞','Toast Friend'],['🌸','Sakura Puff'],['🌙','Moon Pillow'],
- ['⭐','Star Gummy'],['☁️','Cloud Nap'],['🍄','Mushroom Cap'],['🐢','Turtle Tart'],
- ['🦄','Golden Unicorn',1],['🐉','Golden Dragon',1],['🌈','Rainbow Mochi',1],['👑','Royal Pudding',1]
+ ['🍡','Sir Dangles McDango',0],['🍓','Berry Bonkerton',0],['🐱','Professor Purrkins Von Snooze',1],['🍑','Peachy Keen Beanie Bean',0],
+ ['🐻','Barry the Unbearably Squishy',1],['🐰','Lord Fluffington the Third',2],['🐼','Pandamonium Pete',1],['🐸','Gary the Moist Frog',0],
+ ['🍩','Donut Disturb',0],['🧁','Cupcake McSprinkleface',1],['🍰','Captain Shortcake',0],['🐧','Waddles the Unwaddleable',2],
+ ['🦊','Foxy Taiyaki Pants',1],['🐹','Hammy McCheekstuffer',0],['🐙','Octavius Eight-Hugs',2],['🐳','Whalebert the Wobbly',1],
+ ['🍙','Rice Rice Baby',0],['🥟','Dumpling Dumpleton',0],['🍋','Lemon McSourpuss',0],['🍉','Watermelon Wiggleton',0],
+ ['🥐','Croissant Snoozealot',1],['🍞','Toastimus Prime',2],['🌸','Sakura Sneezeblossom',1],['🌙','Moonpie the Very Sleepy',2],
+ ['⭐','Twinkle Toes Gummy',0],['☁️','Cumulus the Floof',1],['🍄','Mushroom With No Room',0],['🐢','Turbo, the Slowest Turtle Ever',2],
+ ['🦄','Glitterhoof the Magnificent',3],['🐉','Dragon Who Is Afraid of Spoons',3],['🌈','Mochi of a Thousand Rainbows',4],['👑','His Royal Squishiness',4],
+ ['🥔','Potato With Feelings',0],['🦆','Sir Quacks-a-Lot',1],['🧀','The Big Cheese',2],['🦖','Tiny-Arms Terry',3],
+ ['🍕','Pepperoni Pal Pauline',1],['🐌','Speedy McSlimeface',0],['🦥','Slothy McNapperson',2],['👽','Blorp from Planet Squish',3],
+ ['🪐','Saturnina, Queen of Rings',4],['💎','The Squishamond',4]
 ];
-function awardSquishy(bonus){ const owned=new Set(S.squishies); const rareRoll=Math.random()<(bonus?.25:.12);
-  let pool=SQUISHIES.map((s,i)=>i).filter(i=>!owned.has(i) && (!!SQUISHIES[i][2]===rareRoll));
-  if(!pool.length) pool=SQUISHIES.map((s,i)=>i).filter(i=>!owned.has(i));
+const TIERS=[{name:'Common',col:'#8a86a3',bg:'#ffffff',w:50,wMix:40},{name:'Uncommon',col:'#1f9d61',bg:'#e9fbf1',w:28,wMix:28},{name:'Rare',col:'#2f6ee8',bg:'#e8f0ff',w:14,wMix:18},
+  {name:'Epic',col:'#8a3ffc',bg:'#f3eaff',w:6,wMix:10},{name:'Legendary',col:'#d99a00',bg:'linear-gradient(135deg,#fff6cc,#ffe0f0)',w:2,wMix:4}];
+function awardSquishy(bonus){ const owned=new Set(S.squishies), left=t=>SQUISHIES.map((s,i)=>i).filter(i=>!owned.has(i)&&SQUISHIES[i][2]===t);
+  const ws=TIERS.map(t=>bonus?t.wMix:t.w); let r=Math.random()*ws.reduce((a,b)=>a+b,0), tier=0; while(r>=ws[tier]){ r-=ws[tier]; tier++; }
+  // if every squishy in that tier is collected, step down to a more common tier, then up
+  let pool=[]; for(const t of [tier,...[...Array(tier).keys()].reverse(),...[0,1,2,3,4].filter(x=>x>tier)]){ pool=left(t); if(pool.length) break; }
   if(!pool.length) return null; const i=pick(pool); S.squishies.push(i); save(); return SQUISHIES[i]; }
 
 /* =========================================================
@@ -986,14 +1055,17 @@ function renderHome(){
   for(const k of ['shop','potion','lab','stage']) $('lvl-'+k).textContent=`Level ${S.worlds[k].level} ${lv[S.worlds[k].level]}`;
   const h=new Date().getHours();
   $('greet').textContent = d.goal? 'Daily goal done! Extra practice still earns points. 🌟'
-    : d.q? `${g-d.q} more questions to hit today's goal!` : (h<12?'Good morning! ':h<17?'Good afternoon! ':'Good evening! ')+'Pick a world. Every 4 answers earns a video break.';
+    : d.q? `${g-d.q} more questions to hit today's goal!` : (h<12?'Good morning! ':h<17?'Good afternoon! ':'Good evening! ')+'Pick a world. Every 4 answers earns a break.';
   $('soundBtn').textContent=S.settings.sound?'🔊':'🔇';
 }
 $('soundBtn').onclick=()=>{ S.settings.sound=!S.settings.sound; save(); renderHome(); SFX.tap(); };
 function renderCollection(){
   $('cMoney').textContent=money(owed()); $('cPts').textContent=`${S.unpaid.toLocaleString()} points · ${S.settings.pointsPerDollar} points = $1`;
   const owned=new Set(S.squishies); $('cCount').textContent=`${owned.size}/${SQUISHIES.length}`;
-  $('sqgrid').innerHTML=SQUISHIES.map((s,i)=>`<button class="sqcell ${owned.has(i)?'':'locked'} ${s[2]?'rare':''}" onclick="${owned.has(i)?'SFX.squish()':'SFX.tap()'}"><span class="e">${s[0]}</span>${owned.has(i)?s[1]:'???'}</button>`).join('');
+  const tl=$('sqtiers'); if(tl) tl.innerHTML=TIERS.map((t,k)=>{ const all=SQUISHIES.filter(s=>s[2]===k).length, got=SQUISHIES.filter((s,i)=>s[2]===k&&owned.has(i)).length; return `<div><span style="color:${t.col}">${t.name}</span> ${got}/${all}</div>`; }).join('');
+  const order=SQUISHIES.map((s,i)=>i).sort((a,b)=>SQUISHIES[a][2]-SQUISHIES[b][2]||a-b);
+  $('sqgrid').innerHTML=order.map(i=>{ const s=SQUISHIES[i], t=TIERS[s[2]], has=owned.has(i);
+    return `<button class="sqcell t${s[2]} ${has?'':'locked'}" style="background:${has?t.bg:'#fff'};border-color:${t.col}55" onclick="${has?'SFX.squish()':'SFX.tap()'}"><span class="e">${s[0]}</span>${has?s[1]:'???'}<span class="tr" style="color:${t.col}">${t.name}</span></button>`; }).join('');
 }
 
 /* =========================================================
@@ -1003,7 +1075,7 @@ let G=null;
 function startGame(world){
   SFX.whoosh();
   const every=S.settings.breakEvery;
-  G={world, idx:0, total:S.settings.roundLen, results:[], combo:0, best:0, pts:0, tries:0, q:null, cur:'', squishiesWon:[]};
+  G={world, idx:0, total:S.settings.roundLen, results:[], combo:0, best:0, pts:0, tries:0, q:null, cur:'', squishiesWon:[], drops:0};
   const app=$('app'); app.className=GAMES[world].cls; $('game').className='screen '+GAMES[world].cls;
   buildScene(world); show('game'); nextQ();
 }
@@ -1077,6 +1149,7 @@ function answer(ok, el){
     G.results.push(first); SFX.correct(); if(G.combo>=3) setTimeout(SFX.combo,250);
     if(pts>0) { floatPts('+'+money(pts/S.settings.pointsPerDollar),el); setTimeout(SFX.coin,180); }
     sceneReact(true); mochiMood(true);
+    if(first && ((G.combo===5||G.combo===10) || Math.random()<(G.world==='mix'?.12:.07))) { const c=G.combo; setTimeout(()=>squishyDrop(c===5||c===10? c : 0),650); }
     const cheers = G.combo>=5? ['UNSTOPPABLE! 🔥','Fever mode! ✨','Legendary combo!'] : first? ['Awesome!','Nailed it!','Brilliant!','Perfect!','Sugoi! ✨','You got it!'] : ['Got it on the second try!','Nice recovery!'];
     showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?`⚡ On the beat! Speed bonus +${money(10/S.settings.pointsPerDollar)}.`:'', G.combo>=3?`Combo ×${G.combo}! Bonus +${money(10/S.settings.pointsPerDollar)}.`:''].filter(Boolean).join(' ') : G.q.explain, first? {script:teacherScript(G.q)} : {auto:true, script:secondScript(G.q)});
   } else if(G.tries===1){
@@ -1139,8 +1212,8 @@ function celebrate(title,html,next){
   openModal(`<div class="mochi happy" style="margin:0 auto"><div class="body"></div><span class="leaf">⭐</span><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div><h2>${title}</h2>${html}<button class="btn" id="mOk">Keep going!</button>`);
   $('mOk').onclick=()=>{ closeModal(); next(); };
 }
-function quitGame(){
-  if(G && G.results.length && !confirm('Leave this round? Points you earned are kept.')) return;
+async function quitGame(){
+  if(G && G.results.length && !(await ask('Leave this round? Points you earned are kept.',{ok:'Leave',cancel:'Keep playing'}))) return;
   G=null; hideSheet(); $('app').className=''; show('home');
 }
 
@@ -1159,16 +1232,207 @@ function parseSrc(line){ line=line.trim(); if(!line) return null; let m;
   if(/^[\w-]{11}$/.test(line)) return {id:line, short:true};
   return null; }
 function worldVideoLines(w){ const v=(S.settings.worldVideos[w]||[]).filter(x=>!/UCI3szCgzGTRBTF_2dVaTZdQ/.test(x)); return (v&&v.length)? v : OFFICIAL_VIDEOS[w]; }
+function ytLink(s){ if(s.id) return 'https://www.youtube.com/'+(s.short?'shorts/':'watch?v=')+s.id;
+  if(/^UUSH/.test(s.list)) return 'https://www.youtube.com/channel/UC'+s.list.slice(4)+'/shorts';
+  return 'https://www.youtube.com/playlist?list='+s.list; }
 let ytReady=null;
 function loadYT(){
   if(window.YT && YT.Player) return Promise.resolve();
   if(ytReady) return ytReady;
   ytReady=new Promise((res,rej)=>{ window.onYouTubeIframeAPIReady=()=>res(); const sc=document.createElement('script'); sc.src='https://www.youtube.com/iframe_api';
-    sc.onerror=()=>{ ytReady=null; rej(new Error('blocked')); }; document.head.appendChild(sc); setTimeout(()=>{ if(!(window.YT&&YT.Player)){ ytReady=null; rej(new Error('timeout')); } },12000); });
+    sc.onerror=()=>{ ytReady=null; rej(new Error('blocked')); }; document.head.appendChild(sc); setTimeout(()=>{ if(!(window.YT&&YT.Player)){ ytReady=null; rej(new Error('timeout')); } },8000); });
   return ytReady;
+}
+/* ---------- animated skit breaks (original cartoons drawn with CSS + emoji, no video needed) ---------- */
+const FX={ // extra cartoon sounds
+  boing(){ tone(140,.35,{vol:.16,slide:420}); tone(280,.25,{type:'triangle',vol:.06,at:.05,slide:300}); },
+  splat(){ noise(.3,{vol:.4,freq:500,q:.8,slide:-380}); tone(90,.2,{vol:.15,slide:-40}); },
+  up(){ tone(320,.7,{vol:.12,slide:1400}); },
+  down(){ tone(1500,.8,{vol:.1,slide:-1300}); },
+  pop(){ tone(900,.08,{vol:.14,slide:-500}); },
+  plop(){ tone(500,.12,{vol:.14,slide:-380}); },
+  beep(hi){ tone(hi?1320:880,.15,{type:'square',vol:.06}); },
+  boom(){ noise(.9,{vol:.5,freq:300,q:.5,slide:-240}); tone(60,.6,{vol:.25,slide:-25}); },
+  creak(){ tone(140,.6,{type:'sawtooth',vol:.035,slide:70}); tone(180,.5,{type:'sawtooth',vol:.025,at:.25,slide:-60}); },
+  squeak(){ tone(1600,.12,{type:'square',vol:.04,slide:500}); },
+  scream(){ for(let i=0;i<6;i++) tone(i%2?900:1100,.09,{type:'square',vol:.04,at:i*.08}); },
+  drum(n=10){ for(let i=0;i<n;i++) noise(.06,{vol:.18,freq:220,q:1,slide:-60,at:i*.07}); },
+  burp(){ tone(110,.45,{type:'sawtooth',vol:.08,slide:-50}); tone(95,.35,{type:'square',vol:.03,at:.1,slide:-30}); },
+  hic(){ tone(700,.07,{vol:.12,slide:400}); },
+  cheer(){ noise(1.6,{vol:.12,freq:1500,q:.4,slide:-300}); },
+  tune(notes,step=.16,type='triangle'){ notes.forEach((n,i)=>{ if(n) tone(n,step*.9,{type,vol:.1,at:i*step}); }); }
+};
+Object.setPrototypeOf(FX,SFX); // FX.tap(), FX.fanfare() etc. fall back to the game's sounds
+const MOCHI_HTML='<div class="mochi" style="animation:none"><div class="body"></div><i class="eye l"></i><i class="eye r"></i><i class="cheek l"></i><i class="cheek r"></i><i class="mouth"></i></div>';
+function skitKit(stage){
+  const H=stage.clientHeight||300, u=H/100, cancel={dead:false}; let rej; const stop=new Promise((_,r)=>{ rej=r; }); stop.catch(()=>{});
+  cancel.kill=()=>{ cancel.dead=true; rej('cancel'); };
+  const g=p=>Promise.race([p,stop]);
+  const K={u,cancel,stage,
+    add(html,{x=50,y=80,size=12,z=2,cls='',flip=false}={}){ const o=document.createElement('div'); o.className='act '+cls; o.style.cssText=`left:${x}%;top:${y}%;z-index:${z};font-size:${size*u}px`;
+      o.innerHTML=`<div class="in"><div class="ct" style="${flip?'transform:scaleX(-1)':''}">${html}</div></div>`; stage.appendChild(o); return {o,in:o.firstChild,ct:o.firstChild.firstChild,x,y,size}; },
+    mochi(opt={}){ const a=K.add(MOCHI_HTML,Object.assign({size:16},opt)), sc=(opt.size||16)*u/66, mo=a.ct.querySelector('.mochi');
+      a.ct.style.width=78*sc+'px'; a.ct.style.height=66*sc+'px'; mo.style.transformOrigin='0 0'; mo.style.transform=`scale(${sc})`; return a; },
+    move(a,x,y,ms=800,easing='ease-in-out'){ const f=[{left:a.x+'%',top:a.y+'%'},{left:x+'%',top:y+'%'}]; a.x=x; a.y=y;
+      const an=a.o.animate(f,{duration:ms,easing,fill:'forwards'}); return g(an.finished.then(()=>{ a.o.style.left=x+'%'; a.o.style.top=y+'%'; an.cancel(); })); },
+    anim(a,frames,ms=600,opt={}){ const an=a.in.animate(frames,Object.assign({duration:ms,easing:'ease-in-out'},opt)); return g(an.finished); },
+    loop(a,frames,ms=600){ return a.in.animate(frames,{duration:ms,iterations:Infinity,easing:'ease-in-out'}); },
+    hop(a,x,y,h=14,ms=500){ return Promise.all([K.move(a,x,y,ms,'linear'),K.anim(a,[{transform:'translateY(0) scale(1.15,.85)'},{transform:`translateY(${-h*u}px) scale(.92,1.1)`,offset:.45},{transform:'translateY(0) scale(1.1,.9)'}],ms)]); },
+    flip(a,on){ a.ct.style.transform=on?'scaleX(-1)':''; },
+    squash(a,ms=300){ return K.anim(a,[{transform:'scale(1,1)'},{transform:'scale(1.3,.7)'},{transform:'scale(1,1)'}],ms); },
+    say(a,text,ms=1600,{big=false,dy=0}={}){ const b=document.createElement('div'); b.className='sbub'+(big?' big':''); b.textContent=text;
+      b.style.left=a.x+'%'; b.style.top=`calc(${a.y}% - ${(a.size*1.05+dy)*u}px)`; stage.appendChild(b); return K.wait(ms).finally(()=>b.remove()); },
+    caption(text,ms=1800,cls=''){ const c=document.createElement('div'); c.className='cap '+cls; c.textContent=text; stage.appendChild(c); return K.wait(ms).finally(()=>c.remove()); },
+    title(text){ return K.caption(text,1500,'ttl'); },
+    bg(css,ms=600){ stage.style.transition=`background ${ms}ms`; stage.style.background=css; },
+    flash(color='#fff'){ const f=document.createElement('div'); f.className='flash'; f.style.background=color; stage.appendChild(f); setTimeout(()=>f.remove(),700); },
+    burst(x,y,chars='⭐✨💫',n=8){ const arr=[...chars]; for(let i=0;i<n;i++){ const s=K.add(arr[i%arr.length],{x,y,size:5,z:5}); const ang=i/n*Math.PI*2, d=16*u;
+      s.in.animate([{transform:'translate(0,0) scale(.4)',opacity:1},{transform:`translate(${Math.cos(ang)*d}px,${Math.sin(ang)*d}px) scale(1)`,opacity:0}],{duration:800,easing:'ease-out',fill:'forwards'}); setTimeout(()=>s.o.remove(),850); } },
+    float(chars,x,y,n=5,spread=10){ for(let i=0;i<n;i++) setTimeout(()=>{ if(cancel.dead) return; const s=K.add([...chars][i%[...chars].length],{x:x+(Math.random()-.5)*spread,y,size:5+Math.random()*3,z:4});
+      s.in.animate([{transform:'translateY(0)',opacity:1},{transform:`translateY(${-30*u}px)`,opacity:0}],{duration:1400,easing:'ease-out',fill:'forwards'}); setTimeout(()=>s.o.remove(),1450); },i*160); },
+    rm(a){ a&&a.o.remove(); },
+    wait(ms){ return g(new Promise(r=>setTimeout(r,ms))); }
+  };
+  return K;
+}
+const GROUND=(c)=>`<div class="gnd" style="background:${c}"></div>`;
+const SKITS={
+  dumpling:{title:'Mochi vs. the Runaway Dumpling', worlds:[], bg:'linear-gradient(#bfe6ff,#e9f7ff 70%)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#9be29b'));
+    const m=K.mochi({x:22,y:86}), d=K.add('🥟',{x:112,y:86,size:11});
+    await K.title(this.title);
+    K.anim(d,[{transform:'rotate(0)'},{transform:'rotate(-720deg)'}],1100); await K.move(d,62,86,1100,'ease-out'); FX.boing(); await K.squash(d);
+    await K.say(d,'Hi! Bet you can\'t catch me!',1700);
+    await K.say(m,'Challenge accepted.',1200);
+    K.anim(d,[{transform:'rotate(0)'},{transform:'rotate(720deg)'}],700); await K.move(d,118,86,700,'ease-in');
+    FX.boing(); await K.hop(m,45,86,16,450); FX.boing(); await K.hop(m,68,86,16,450);
+    await K.say(m,'Where did it go?',1100);
+    d.x=-15; d.o.style.left='-15%'; K.anim(d,[{transform:'rotate(0)'},{transform:'rotate(720deg)'}],900); await K.move(d,22,86,900,'ease-out');
+    await K.say(d,'Yoo-hoo!',900); K.flip(m,true); FX.squeak(); await K.wait(250);
+    FX.up(); await K.move(m,14,86,450,'ease-in');
+    K.move(d,22,52,300,'ease-out');
+    await K.move(m,4,86,200,'linear'); FX.splat();
+    await K.anim(m,[{transform:'scale(1,1)'},{transform:'scale(1.7,.25)'}],180,{fill:'forwards'}); K.burst(6,72,'⭐💫',6);
+    await K.move(d,6,80,450,'ease-in'); FX.squeak();
+    await K.say(d,'Tag! You\'re it!',1300);
+    K.anim(d,[{transform:'rotate(0)'},{transform:'rotate(1080deg)'}],1000); K.move(d,120,86,1000,'ease-in');
+    FX.boing(); await K.anim(m,[{transform:'scale(1.7,.25)'},{transform:'scale(.8,1.3)'},{transform:'scale(1,1)'}],500,{fill:'forwards'});
+    await K.say(m,'...best two out of three?',1700);
+    await K.caption('THE END (of the dumpling)',1600);
+  }},
+  horror:{title:'The Least Scary Horror Game', worlds:['shop'], bg:'linear-gradient(#241a3d,#3a2a5c)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#1b1430')+'<div class="hud">❤️❤️❤️ <span>LEVEL 1: THE SPOOKY HALLWAY</span></div>');
+    const door=K.add('🚪',{x:78,y:88,size:26}), m=K.mochi({x:12,y:88,z:3});
+    const torch=K.add('🔦',{x:20,y:80,size:6,z:4}); const follow=setInterval(()=>{ if(K.cancel.dead||!torch.o.isConnected) return clearInterval(follow); torch.o.style.left=(parseFloat(getComputedStyle(m.o).left)/K.stage.clientWidth*100+8)+'%'; },50);
+    await K.title(this.title);
+    FX.creak(); await K.say(m,'It\'s fine. Totally fine.',1500);
+    for(const x of [22,32,42,52]){ FX.tap(); await K.hop(m,x,88,5,420); }
+    FX.creak(); await K.anim(door,[{transform:'rotate(0)'},{transform:'rotate(-4deg)'},{transform:'rotate(4deg)'},{transform:'rotate(0)'}],500,{iterations:2});
+    await K.say(m,'Hello...?',1000);
+    const ghost=K.add('👻',{x:76,y:70,size:12,z:4}); ghost.in.style.transform='scale(0)';
+    FX.squeak(); await K.anim(ghost,[{transform:'scale(0)'},{transform:'scale(1.3)'},{transform:'scale(1)'}],350,{fill:'forwards'});
+    await K.say(ghost,'boo?',900);
+    FX.scream(); FX.up(); K.say(m,'AAAAH!',900,{big:true}); K.say(ghost,'AAAAH!',900,{big:true,dy:6});
+    K.move(ghost,125,60,700,'ease-in'); await K.anim(m,[{transform:'translateY(0)'},{transform:`translateY(${-40*K.u}px)`}],450,{fill:'forwards',easing:'ease-out'});
+    FX.down(); await K.anim(m,[{transform:`translateY(${-40*K.u}px)`},{transform:'translateY(0) scale(1.4,.6)'},{transform:'translateY(0)'}],600,{fill:'forwards',easing:'ease-in'}); FX.splat();
+    clearInterval(follow); K.rm(torch); K.bg('linear-gradient(#ffd6ec,#e7dcff)'); FX.pop(); await K.caption('💡 Lights on!',900);
+    K.flip(ghost,true); ghost.o.style.top='78%'; ghost.y=78; await K.move(ghost,70,78,1200,'ease-out');
+    const cookie=K.add('🍪',{x:63,y:76,size:6,z:5});
+    await K.say(ghost,'sorry... cookie?',1500);
+    await K.say(m,'...apology accepted.',1500);
+    K.rm(cookie); FX.plop(); await K.squash(m);
+    await K.caption('Scariness: 1/10. Cuteness: 11/10.',1900);
+  }},
+  potion:{title:'Potion Class Goes Wrong', worlds:['potion'], bg:'linear-gradient(#f7e6c8,#efd2a6)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#b98a5a')+'<div class="shelf">🫙 🌿 🧴 🍶 🫙 🌸</div>');
+    const pot=K.add('<div class="pot"><div class="liq"></div></div>',{x:62,y:90,size:24,z:2}), liq=pot.ct.querySelector('.liq'), m=K.mochi({x:30,y:90,z:3});
+    await K.title(this.title);
+    await K.say(m,'Today\'s potion: Extra Brain Power.',1700);
+    const drop=async(ch,col,line)=>{ const it=K.add(ch,{x:62,y:-5,size:8,z:1}); FX.down(); await K.move(it,62,72,550,'ease-in'); K.rm(it); FX.plop(); liq.style.background=col; K.float('🫧',62,70,3,12); if(line) await K.say(m,line,1300); else await K.wait(500); };
+    await drop('🌿','#5fd38d','One pinch of ginseng...');
+    await drop('🍯','#e9c24a','Two spoons of honey...');
+    await drop('🍄','#c86bff','Wait. Which mushroom was it?');
+    FX.bubble(); K.float('🫧',62,70,8,16); const sh=K.loop(pot,[{transform:'rotate(0)'},{transform:'rotate(-3deg)'},{transform:'rotate(3deg)'},{transform:'rotate(0)'}],260);
+    await K.wait(1300); sh.cancel();
+    FX.boom(); K.flash('#fff'); const puff=K.add('☁️',{x:50,y:85,size:40,z:6}); K.anim(puff,[{transform:'scale(.3)',opacity:1},{transform:'scale(1.4)',opacity:0}],1200,{fill:'forwards'});
+    m.ct.style.filter='hue-rotate(115deg) saturate(1.4)'; const hat=K.add('🍄',{x:30,y:77,size:6,z:4});
+    await K.wait(900); K.rm(puff);
+    await K.say(m,'...I feel smarter?',1400);
+    for(let i=0;i<2;i++){ FX.hic(); K.float('🫧',30,74,1,2); await K.anim(m,[{transform:'translateY(0)'},{transform:`translateY(${-6*K.u}px)`},{transform:'translateY(0)'}],300); K.anim(hat,[{transform:'translateY(0)'},{transform:`translateY(${-6*K.u}px)`},{transform:'translateY(0)'}],300); await K.say(m,'hic!',500); }
+    await K.caption('Lesson: always measure your fractions.',2000);
+  }},
+  rocket:{title:'Rocket Test #1', worlds:['lab'], bg:'linear-gradient(#8fd3ff,#e6f6ff 75%)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#8fd18f')+'<div class="board">TEST LOG<br>Rocket: 🚀<br>Pilot: Mochi<br>Safety: ???</div>');
+    const r=K.add('<span style="display:inline-block;transform:rotate(-45deg)">🚀</span>',{x:50,y:90,size:22,z:2}), m=K.mochi({x:50,y:68,size:12,z:3});
+    await K.title(this.title);
+    await K.say(m,'For science!',1200,{dy:-2});
+    for(const n of ['3','2','1']){ FX.beep(false); await K.caption(n,700,'count'); }
+    FX.beep(true); const fire=K.add('🔥',{x:50,y:98,size:10,z:1}); const sh=K.loop(r,[{transform:'translateX(0)'},{transform:`translateX(${-1*K.u}px)`},{transform:`translateX(${1*K.u}px)`}],90);
+    await K.wait(700); sh.cancel(); FX.whoosh(); FX.up();
+    K.move(fire,50,-40,700,'ease-in'); await K.move(r,50,-30,700,'ease-in'); K.rm(fire);
+    await K.wait(400); await K.say(m,'...uh oh.',1100,{dy:-2});
+    FX.down(); await K.move(m,50,90,500,'ease-in'); FX.splat(); await K.anim(m,[{transform:'scale(1.6,.35)'},{transform:'scale(1,1)'}],500); K.burst(50,80,'⭐💫',6);
+    const fe=K.add('🪶',{x:58,y:-10,size:6,z:4}); K.loop(fe,[{transform:'rotate(-25deg)'},{transform:'rotate(25deg)'}],700);
+    await K.move(fe,50,74,2200,'ease-out');
+    await K.say(m,'Note: add a seat belt.',1600);
+    await K.caption('Results: Rocket 1, Mochi 0. More data needed!',2000);
+  }},
+  leek:{title:'The Leek Spin Encore', worlds:['stage'], bg:'linear-gradient(#0f3d44,#123047)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#0b2530')+'<div class="beam l"></div><div class="beam r"></div><div class="crowd">🙌 👏 🙌 👏 🙌 👏 🙌</div>');
+    const m=K.mochi({x:50,y:84,z:3}), leek=K.add('🥬',{x:62,y:76,size:9,z:4});
+    await K.title(this.title);
+    const C=523,D=587,E=659,F=698,G=784,A=880; const tuneA=[A,G,E,C,D,E,F,D, E,C,D,E,G,E,C,0];
+    FX.tune(tuneA,.18); const sp=K.loop(leek,[{transform:'rotate(0)'},{transform:'rotate(360deg)'}],700);
+    for(let i=0;i<4;i++){ K.float('🎵🎶',50,70,1,30); await K.anim(m,[{transform:'translateY(0) scale(1.1,.9)'},{transform:`translateY(${-8*K.u}px) scale(.95,1.05)`},{transform:'translateY(0) scale(1.1,.9)'}],720); }
+    await K.say(m,'Faster!',800);
+    sp.updatePlaybackRate(4); FX.up(); FX.tune([C,E,G,C*2,E*2,G*2],.08,'square');
+    K.move(leek,50,20,1100,'ease-in'); await K.move(m,50,28,1100,'ease-in');
+    K.move(leek,50,-30,500,'ease-in'); await K.move(m,50,-30,500,'ease-in');
+    await K.wait(900); await K.caption('...',800);
+    FX.down(); K.move(leek,62,76,700,'ease-in'); await K.move(m,50,84,700,'ease-in'); sp.cancel(); FX.boing(); K.burst(50,70,'⭐✨🎵',10);
+    FX.fanfare(); FX.cheer(); await K.say(m,'Thank you, thank you!',1500);
+    await K.caption('Encore? Answer 4 more questions!',1900);
+  }},
+  magic:{title:'Gary the Moist Frog\'s Magic Show', worlds:[], bg:'linear-gradient(90deg,#9b1c3a,#c8325a 20%,#c8325a 80%,#9b1c3a)', async run(K){
+    K.stage.insertAdjacentHTML('beforeend',GROUND('#5a2a1c')+'<div class="table"></div>');
+    const gary=K.add('🐸',{x:28,y:88,size:16,z:3}), hat=K.add('🎩',{x:28,y:62,size:9,z:4}), donut=K.add('🍩',{x:64,y:74,size:9,z:2});
+    await K.title(this.title);
+    await K.say(gary,'Behold! I will make this donut...',1700,{dy:6});
+    await K.say(gary,'DISAPPEAR!',900,{big:true,dy:6});
+    await K.move(hat,64,74,700,'ease-in-out'); FX.drum(14); await K.wait(1000);
+    await K.say(gary,'Abra-ca-DONUT!',1000,{dy:6});
+    FX.pop(); const puff=K.add('☁️',{x:64,y:78,size:18,z:6}); K.anim(puff,[{transform:'scale(.3)',opacity:1},{transform:'scale(1.3)',opacity:0}],800,{fill:'forwards'}); K.rm(donut);
+    await K.wait(500); await K.move(hat,64,56,500,'ease-out'); FX.fanfare();
+    await K.say(gary,'Ta-da!',900,{dy:6});
+    K.rm(puff); await K.wait(300); FX.burp(); await K.squash(gary,400);
+    K.add('✨',{x:34,y:78,size:4,z:5});
+    await K.say(gary,'...the magic is in my tummy now.',1900,{dy:6});
+    await K.caption('Gary will return after he digests.',1900);
+  }}
+};
+let lastSkit=null;
+function pickSkit(w){ const keys=Object.keys(SKITS).filter(k=>k!==lastSkit), mine=keys.filter(k=>SKITS[k].worlds.includes(w)), gen=keys.filter(k=>!SKITS[k].worlds.length);
+  const k = mine.length && Math.random()<.6 ? pick(mine) : pick(gen.length? gen : keys); lastSkit=k; return k; }
+function playSkit(next, key){
+  key=key||pickSkit(G&&G.qWorld); const sk=SKITS[key];
+  openModal(`<button class="modal-x" id="mX" aria-label="Close">✕</button><h2>🎬 Break time!</h2>
+    <div class="skit" id="skit" style="background:${sk.bg}"></div>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="btn soft" id="mSkip">Skip ⏭</button><button class="btn soft" id="mAgain" hidden>🔁 Watch again</button><button class="btn" id="mOk" disabled>Back to math after the show</button></div>`);
+  let K=null;
+  const start=()=>{ const st=$('skit'); if(!st) return; st.innerHTML=''; st.style.background=sk.bg; K=skitKit(st);
+    sk.run(K).then(()=>{ const b=$('mOk'); if(!b) return; b.disabled=false; b.textContent='Back to math! ➜'; $('mSkip').hidden=true; $('mAgain').hidden=false; SFX.coin(); }).catch(e=>{ if(e!=='cancel'){ console.warn('skit',e); const b=$('mOk'); if(b){ b.disabled=false; b.textContent='Back to math! ➜'; } } }); };
+  const leave=()=>{ if(K) K.cancel.kill(); closeModal(); next(); };
+  $('mOk').onclick=leave; $('mSkip').onclick=()=>{ SFX.tap(); leave(); }; $('mX').onclick=()=>{ SFX.tap(); leave(); };
+  $('mAgain').onclick=()=>{ SFX.tap(); if(K) K.cancel.kill(); $('mAgain').hidden=true; $('mSkip').hidden=false; const b=$('mOk'); b.disabled=true; b.textContent='Back to math after the show'; start(); };
+  requestAnimationFrame(()=>requestAnimationFrame(start));
 }
 let brkTimer=null, ytPlayer=null;
 function takeBreak(next){
+  const bt=S.settings.breakType||'skits';
+  if(bt==='skits' || (bt==='both' && Math.random()<.5)) { SFX.fanfare(); confetti(80); return playSkit(next); }
+  return takeVideoBreak(next); }
+function testSkit(k){ const saved=G; G={qWorld:'mix'}; playSkit(()=>{ G=saved; }, k); }
+function takeVideoBreak(next){
   SFX.fanfare(); confetti(100);
   const w=G.qWorld, cap=(S.settings.maxVideoMin||0)*60, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
   const src=srcs.length? pick(srcs) : null;
@@ -1211,7 +1475,9 @@ function takeBreak(next){
   };
   if(location.protocol==='file:'){ msg('Videos only play from the website link (GitHub Pages), not from a downloaded file.'); finish('Stretch break!'); }
   else if(!src){ msg('No videos are set up for this world.'); finish('Stretch break!'); }
-  else loadYT().then(()=>{ if($('ytp')) make(src); }).catch(()=>{ msg('YouTube didn\'t load. 😅 Take a quick stretch!'); finish('Stretch break!'); });
+  else loadYT().then(()=>{ if($('ytp')) make(src); }).catch(()=>{ const url=ytLink(src); const v=document.querySelector('.vidwrap');
+    if(v){ v.style.display='grid'; v.style.placeItems='center'; } if(v) v.innerHTML=`<div class="vidmsg" style="display:block;pointer-events:auto;position:static;margin:auto">Videos can't play inside this page.<br><a class="btn" style="margin-top:12px;display:inline-block;text-decoration:none" href="${url}" target="_blank" rel="noopener">▶ Watch one on YouTube</a><div class="note-s" style="margin-top:8px;color:inherit">Watch one video, then come back here.</div></div>`;
+    finish('Break time!'); });
   const leave=()=>{ over=true; clearInterval(brkTimer); try{ ytPlayer&&ytPlayer.destroy(); }catch(e){} ytPlayer=null; closeModal(); next(); };
   btn().onclick=leave; $('mSkip').onclick=()=>{ SFX.tap(); leave(); }; $('mX').onclick=()=>{ SFX.tap(); leave(); };
 }
@@ -1224,13 +1490,25 @@ function finishRound(){
   openModal(`<h2>${stars===3?'🏆 Perfect round!':stars===2?'🌟 Great job!':stars===1?'👍 Nice work!':'💪 Keep practicing!'}</h2>
     <div class="stars">${[0,1,2].map(i=>`<span style="animation-delay:${.2+i*.25}s">${i<stars?'⭐':'☆'}</span>`).join('')}</div>
     <div class="stats3"><div><b>${correct}/${G.total}</b>first try</div><div><b>+${money(G.pts/S.settings.pointsPerDollar)}</b>earned</div><div><b>${G.best}</b>best combo</div></div>
-    ${G.squishiesWon.length?`<div class="newsq">${G.squishiesWon.map(s=>`<span style="font-size:40px">${s[0]}</span>`).join('')}<div>squishies won!</div></div>`:''}
+    ${G.squishiesWon.length?`<div class="newsq">${G.squishiesWon.map(s=>`<span style="font-size:40px" title="${s[1]} (${TIERS[s[2]].name})">${s[0]}</span>`).join('')}<div>${G.squishiesWon.length===1? G.squishiesWon[0][1]+'<br><small style="color:'+TIERS[G.squishiesWon[0][2]].col+'">'+TIERS[G.squishiesWon[0][2]].name+'</small>' : 'squishies won!'}</div></div>`:''}
     <p style="font-size:18px">🫙 Allowance jar: <b>${money(owed())}</b></p>
     <div class="row" style="justify-content:center"><button class="btn soft" id="mHome">Home</button><button class="btn" id="mAgain">Play again</button></div>`);
   const w=G.world;
   $('mHome').onclick=()=>{ closeModal(); G=null; $('app').className=''; show('home'); };
   $('mAgain').onclick=()=>{ closeModal(); startGame(w); };
 }
+// In-page dialogs (the browser's confirm/prompt/alert don't work everywhere, e.g. inside an embedded page)
+function ask(msg,{ok='OK',cancel='Cancel',input=null,area=null,extra=null,okClass='btn'}={}){
+  return new Promise(res=>{ const box=$('dlgBox'), ov=$('dlg');
+    box.innerHTML=`<p style="font-size:18px;margin:6px 0 4px">${msg}</p>${input!==null?`<input id="dlgIn" inputmode="numeric" value="${input}">`:''}${area!==null?`<textarea id="dlgArea" spellcheck="false"></textarea>`:''}
+      <div class="row" style="justify-content:center">${cancel?`<button class="btn soft" id="dlgNo">${cancel}</button>`:''}${extra?`<button class="btn soft" id="dlgEx">${extra.label}</button>`:''}<button class="${okClass}" id="dlgYes">${ok}</button></div>`;
+    if(area!==null) $('dlgArea').value=area;
+    ov.classList.add('show'); const done=v=>{ ov.classList.remove('show'); box.innerHTML=''; res(v); };
+    $('dlgYes').onclick=()=>done(input!==null? $('dlgIn').value : area!==null? $('dlgArea').value : true);
+    if(cancel) $('dlgNo').onclick=()=>done(input!==null||area!==null? null : false);
+    if(extra) $('dlgEx').onclick=()=>extra.run(box);
+    const f=$('dlgIn')||$('dlgArea'); if(f) setTimeout(()=>f.focus(),50); }); }
+const note = msg => ask(msg,{cancel:null});
 function openModal(html){ $('modal').innerHTML=html; $('ov').classList.add('show'); }
 function closeModal(){ $('ov').classList.remove('show'); $('modal').innerHTML=''; }
 
@@ -1284,42 +1562,53 @@ function renderParent(){
   $('pHist').innerHTML = S.payouts.length? S.payouts.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${p.points}</td><td>${money(p.dollars)}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts yet</td></tr>';
   $('pStats').innerHTML=['shop','potion','lab','stage'].map(k=>{ const w=S.worlds[k]; return `<tr><td>${GAMES[k].name}</td><td>${w.level}</td><td>${w.answered}</td><td>${w.answered?Math.round(w.firstTry/w.answered*100)+'%':'–'}</td></tr>`; }).join('');
   const t=today(); $('pDays').innerHTML=Array.from({length:7},(_,i)=>{ const d=dayOffset(t,-i), r=S.days[d]||{q:0,pts:0,goal:false}; return `<tr><td>${i===0?'Today':d}</td><td>${r.q}</td><td>${r.pts}</td><td>${r.goal?'✅':''}</td></tr>`; }).join('');
-  fillVoiceList(); $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
+  fillVoiceList(); $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; $('sBreak').value=st.breakType||'skits'; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,500); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0);
+  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,500); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0); st.breakType=$('sBreak').value;
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
     st.worldVideos[w] = (good.join('\n')===OFFICIAL_VIDEOS[w].join('\n'))? [] : good; }
-  const p=$('sPin').value.trim(); if(p){ if(/^\d{4,6}$/.test(p)) st.pin=p; else return alert('PIN must be 4 to 6 digits.'); }
+  const p=$('sPin').value.trim(); if(p){ if(/^\d{4,6}$/.test(p)) st.pin=p; else { note('PIN must be 4 to 6 digits.'); return; } }
   save(); renderParent(); toast(bad.length? `Saved. ${bad.length} video line(s) weren't recognized and were skipped.` : 'Settings saved ✓');
 }
-function markPaid(){
+async function markPaid(){
   if(S.unpaid<=0) return toast('Nothing to pay right now');
   const dollars=+owed().toFixed(2);
-  if(!confirm(`Record a payout of ${money(dollars)} (${S.unpaid} points)? This empties the allowance jar.`)) return;
+  if(!(await ask(`Record a payout of <b>${money(dollars)}</b> (${S.unpaid} points)? This empties the allowance jar.`,{ok:'Record payout'}))) return;
   S.payouts.push({date:today(),points:S.unpaid,dollars}); S.unpaid=0; save(); renderParent(); SFX.coin(); confetti(60);
 }
-function adjustPts(){
-  const v=prompt('Points to add (use a minus sign to remove), e.g. 100 or -50'); if(v===null) return;
-  const n=parseInt(v,10); if(isNaN(n)) return alert('Please enter a whole number.');
+async function adjustPts(){
+  const v=await ask('Points to add (use a minus sign to remove), e.g. 100 or -50',{input:'',ok:'Apply'}); if(v===null) return;
+  const n=parseInt(v,10); if(isNaN(n)) { note('Please enter a whole number.'); return; }
   S.unpaid=Math.max(0,S.unpaid+n); if(n>0) S.lifetime+=n; save(); renderParent();
 }
 function exportData(){
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}), a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=`mochi-math-backup-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  const txt=JSON.stringify(S);
+  ask('Here is your backup. Copy this text and save it somewhere (Notes works), or download it as a file. To move progress to another device, use Restore backup there and paste it in.',
+    {area:txt, ok:'Copy text', cancel:'Close', extra:{label:'Download file', run:()=>{ try{ const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}), a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=`mochi-math-backup-${today()}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }catch(e){} toast('If no file appeared, use Copy text instead.'); }}})
+  .then(v=>{ if(v===null) return; const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+    const fallback=()=>{ try{ document.execCommand('copy'); toast('Backup copied ✓'); }catch(e){ toast('Select the text and copy it.'); } ta.remove(); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(()=>{ ta.remove(); toast('Backup copied ✓'); },fallback); else fallback(); });
+}
+function restoreFrom(text){ try{ const d=JSON.parse(text); if(!d.settings||!d.worlds) throw 0; try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){} load(); renderParent(); toast('Backup restored ✓'); }
+  catch(e){ note('That doesn\'t look like a Mochi Math backup. Paste the whole text from Download backup.'); } }
+async function restoreData(){
+  const v=await ask('Paste your backup text below, or choose a backup file.',{area:'',ok:'Restore',extra:{label:'Choose file…',run:()=>{ $('dlg').classList.remove('show'); $('imp').click(); }}});
+  if(v && v.trim()) restoreFrom(v.trim());
 }
 function importData(inp){
   const f=inp.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.settings||!d.worlds) throw 0; localStorage.setItem(KEY,JSON.stringify(d)); load(); renderParent(); toast('Backup restored ✓'); }catch(e){ alert('That file does not look like a Mochi Math backup.'); } inp.value=''; };
+  r.onload=()=>{ restoreFrom(r.result); inp.value=''; };
   r.readAsText(f);
 }
-function resetAll(){
-  if(!confirm('Erase ALL progress, points, squishies and settings on this device?')) return;
-  if(!confirm('Are you sure? This cannot be undone. (Download a backup first if unsure.)')) return;
-  localStorage.removeItem(KEY); load(); show('home');
+async function resetAll(){
+  if(!(await ask('Erase ALL progress, points, squishies and settings on this device?',{ok:'Erase',okClass:'btn bad'}))) return;
+  if(!(await ask('Are you sure? This cannot be undone. (Back up progress first if unsure.)',{ok:'Yes, erase everything',okClass:'btn bad'}))) return;
+  try{ localStorage.removeItem(KEY); }catch(e){} load(); show('home');
 }
 
 renderHome();
