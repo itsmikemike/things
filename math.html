@@ -427,7 +427,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     <div class="panel">
       <h2>⚙️ Settings</h2>
       <div class="two">
-        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 500, so each first-try correct answer (100 points) earns $0.20. Second-try correct answers earn half. Combos and fast answers add a few cents.</small></label>
+        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 1000, so each first-try correct answer (100 points) earns $0.10. Second-try correct answers earn half. Combos and fast answers add a few cents.</small></label>
         <label class="field">Daily goal (questions)<input id="sGoal" type="number" min="5" inputmode="numeric"><small>Meeting the goal keeps the streak and gives a bonus.</small></label>
         <label class="field">Teacher voice<select id="sVoiceName"></select><small>★ = extra-natural voice. <button type="button" class="linkbtn" style="padding:2px 0;font-size:13px" onclick="testVoice()">▶ Test voice</button></small></label>
         <label class="field">Read explanations aloud<select id="sVoice"><option value="1">Yes, automatically when she misses one</option><option value="0">Only when she taps 🔊 Hear it</option></select><small>Uses the iPad or computer's built-in voice. Works offline.</small></label>
@@ -861,7 +861,7 @@ const LEGACY_GEN={shop:genShop, stage:genStage};
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:500,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,breakType:'skits',worldVideos:{},pin:'1234',sound:true,voice:true},
+const DEFAULTS={ settings:{pointsPerDollar:1000,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,breakType:'skits',worldVideos:{},pin:'1234',sound:true,voice:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -872,6 +872,8 @@ function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S=
     S.settings.pointsPerDollar=100; if(S.settings.dailyCap) S.settings.dailyCap=Math.round(S.settings.dailyCap*100/old); }
   if(!S.settings.pointsV3){ S.settings.pointsV3=1; // 2026-10-25: $0.20 per correct answer (500 points = $1); keep the jar's dollar value
     const old=S.settings.pointsPerDollar||100; if(old===100){ S.unpaid*=5; S.lifetime*=5; for(const d of Object.values(S.days)) d.pts*=5; for(const pay of S.payouts) pay.points*=5; if(S.settings.dailyCap) S.settings.dailyCap*=5; S.settings.pointsPerDollar=500; } }
+  if(!S.settings.pointsV4){ S.settings.pointsV4=1; // 2026-10-26: $0.10 per correct answer (1000 points = $1); keep the jar's dollar value
+    if((S.settings.pointsPerDollar||500)===500){ S.unpaid*=2; S.lifetime*=2; for(const d of Object.values(S.days)) d.pts*=2; for(const pay of S.payouts) pay.points*=2; if(S.settings.dailyCap) S.settings.dailyCap*=2; S.settings.pointsPerDollar=1000; } }
   if(!S.settings.lessonV2){ S.settings.lessonV2=1; S.settings.roundLen=12; S.settings.breakEvery=4; if(S.settings.dailyGoal===20) S.settings.dailyGoal=24; }
   S.settings.worldVideos ||= {};
   for(const g of ['potion','stage','shop','lab']) S.worlds[g]=Object.assign({level:1,answered:0,firstTry:0,recent:[]},S.worlds[g]||{}); }
@@ -1566,7 +1568,7 @@ function renderParent(){
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,500); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0); st.breakType=$('sBreak').value;
+  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,1000); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0); st.breakType=$('sBreak').value;
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
