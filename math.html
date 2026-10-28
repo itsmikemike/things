@@ -1,4 +1,8 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#7c5cff">
 <title>Mochi Math Quest</title>
@@ -333,8 +337,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
 .modal-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:#f4f1ff;font-size:18px;font-weight:700;z-index:2}
 .modal-x:active{transform:scale(.9)}
 </style>
-
-
+</head>
+<body>
 <div id="bubbles"></div>
 <canvas id="confetti"></canvas>
 <div id="app">
@@ -430,8 +434,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
         <label class="field">Max points per day (0 = no limit)<input id="sCap" type="number" min="0" inputmode="numeric"><small>She can keep practicing after the cap, it just stops earning.</small></label>
         <label class="field">Questions per lesson<input id="sLen" type="number" min="4" max="40" inputmode="numeric"><small>Default 12.</small></label>
         <label class="field">Break every N questions<input id="sEvery" type="number" min="2" max="20" inputmode="numeric"><small>Default 4, so a 12-question lesson has 3 breaks (the last one comes right before the results).</small></label>
-        <label class="field">Breaks show<select id="sBreak"><option value="skits">Animated skits (built in, always kid-safe)</option><option value="videos">YouTube videos from each world</option><option value="both">A mix of both</option></select><small>Skits are short original cartoons that work anywhere, even offline.</small></label>
-        <label class="field">Longest a break video can run (minutes)<input id="sMax" type="number" min="0" max="60" inputmode="numeric"><small>0 = no limit, so every video plays to the end. If you set a limit, longer videos stop there.</small></label>
+        <label class="field">Breaks show<select id="sBreak"><option value="skits">Animated skits (built in, always kid-safe)</option><option value="videos">YouTube videos from each world</option><option value="both">A mix: 6 in 10 videos, the rest skits</option></select><small>Skits are short original cartoons that work anywhere, even offline. In the Claude artifact, breaks are always skits because it can't play YouTube.</small></label>
+        <label class="field">Longest a break video can run (seconds)<input id="sMax" type="number" min="0" max="600" inputmode="numeric"><small>Default 45. Shorter videos play to the end, longer ones stop here. 0 = no limit.</small></label>
         <label class="field">Change PIN<input id="sPin" type="text" inputmode="numeric" maxlength="6" placeholder="leave blank to keep"></label>
       </div>
       <h3 style="text-align:left;margin:6px 0">🎬 Animated skits</h3>
@@ -903,7 +907,9 @@ const LEGACY_GEN={shop:genShop, stage:genStage, lab:genLab};
    Saved state
    ========================================================= */
 const KEY='mochiMathQuest.v1';
-const DEFAULTS={ settings:{pointsPerDollar:1000,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,breakType:'skits',worldVideos:{},pin:'1234',sound:true,voice:true},
+// The Claude artifact copy can't embed YouTube; artifact/build.py flips this to true there.
+const IS_ARTIFACT=false;
+const DEFAULTS={ settings:{pointsPerDollar:1000,dailyGoal:24,dailyCap:0,breakEvery:4,roundLen:12,maxVideoMin:0,maxVideoSec:45,breakType:IS_ARTIFACT?'skits':'both',videoShare:60,worldVideos:{},pin:'1234',sound:true,voice:true},
   lifetime:0, unpaid:0, payouts:[], streak:0, lastGoalDay:null, days:{}, squishies:[], worlds:{} };
 let S;
 function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S={}; }
@@ -916,6 +922,8 @@ function load(){ try{ S=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ S=
     const old=S.settings.pointsPerDollar||100; if(old===100){ S.unpaid*=5; S.lifetime*=5; for(const d of Object.values(S.days)) d.pts*=5; for(const pay of S.payouts) pay.points*=5; if(S.settings.dailyCap) S.settings.dailyCap*=5; S.settings.pointsPerDollar=500; } }
   if(!S.settings.pointsV4){ S.settings.pointsV4=1; // 2026-10-26: $0.10 per correct answer (1000 points = $1); keep the jar's dollar value
     if((S.settings.pointsPerDollar||500)===500){ S.unpaid*=2; S.lifetime*=2; for(const d of Object.values(S.days)) d.pts*=2; for(const pay of S.payouts) pay.points*=2; if(S.settings.dailyCap) S.settings.dailyCap*=2; S.settings.pointsPerDollar=1000; } }
+  if(!S.settings.breakV2){ S.settings.breakV2=1; // 2026-10-28 (Mike): GitHub copy = 60% YouTube (max 45 s) + 40% cartoons; artifact = cartoons
+    S.settings.breakType=IS_ARTIFACT?'skits':'both'; S.settings.videoShare=60; S.settings.maxVideoSec=45; }
   if(!S.settings.lessonV2){ S.settings.lessonV2=1; S.settings.roundLen=12; S.settings.breakEvery=4; if(S.settings.dailyGoal===20) S.settings.dailyGoal=24; }
   S.settings.worldVideos ||= {};
   for(const g of ['potion','stage','shop','lab']) S.worlds[g]=Object.assign({level:1,answered:0,firstTry:0,recent:[]},S.worlds[g]||{}); }
@@ -1013,19 +1021,65 @@ const TEACHER='Mrs. Calder';
 const INTRO_MISS=["Alright, let's slow down and look at this one carefully.","Okay. Pencils down for a second, and let's think this through.","That's a very common mistake. I've seen it in every grade I've ever taught. Here's how to fix it.","Not quite. Let me show you what's really going on here.","Good effort. Now let's find where it went sideways.","This is exactly the kind of problem worth slowing down for.","Let's break this into small steps.","Picture this with me for a moment.","Here's the thing about this kind of problem.","Mistakes are just information. Let's use it.","Let's look at this one from a different angle.","Okay, let's make sense of this together.","I want you to really understand this one, so let's take it apart.","Hmm. Let's try a fresh way of seeing it.","No problem. Every mathematician gets things wrong. The good ones figure out why."];
 const INTRO_SECOND=["There it is. Now let's make sure you know why it works.","You got there. Here's the reasoning, so next time it's first try.","Good correction. Let's lock in the method.","That's the right answer. Now let's make it stick.","Yes. Second tries count. Here's what's happening.","You fixed it. Let me show you a quick way to see it.","Nice persistence. Here's the why behind it.","Right! And here's how I'd explain it to the class.","That's it. Let's go over it once, so it becomes automatic.","Correct. Now, the important part is the why.","Good. You noticed your mistake, and that's a real skill.","Much better. Let's review it so it sticks."];
 const OUTRO=["Now you know how to do it.","Keep that trick handy. You'll see it again.","Try to remember the steps, not just the answer.","Alright. On to the next one.","Next time, I bet you'll get it on the first try.","That's the whole idea. Let's keep moving.","Tuck that rule away in your brain.","See? Not so scary when we take it one step at a time.","Let's see if you can do the next one on your own.","Remember, slow and careful beats fast and wrong.","That method works every single time.","Good. Let's keep going.","",""];
-const JOKES_ANY=["Why was six afraid of seven? Because seven ate nine. I've told that joke to kindergartners and eighth graders, and only the kindergartners laughed.","Fun fact: I once had a student try to divide by zero. We don't talk about that day.","Why did the student wear glasses in math class? It helps with di-vision.","I've graded about a million math tests in my career. You're doing better than you think.","My old students say I can spot a missing step from across the room. It's true. I can.","What's a math teacher's favorite season? Sum-mer. I'll be here all week."];
-const JOKES={potion:["I'd tell you a joke about fractions, but you'd only get part of it.","Maomao would tell you to test it twice. I agree with her.","Fractions are like pizza. I've never met a pizza problem I didn't like."],
-  lab:["Why did the decimal point go to the lab? It wanted to find its place.","A decimal point in the wrong spot is like a rocket pointed at the ground. Technically it works. Just not how you hoped.","Mark Rober would call that a failed test launch. And failed launches are where the best data comes from.","Estimating first is what real engineers do. Mark Rober checks his numbers before anything launches."],
-  stage:["Times tables are like song lyrics. Sing them enough, and they get stuck in your head forever.","Even Miku practices her songs over and over. Times tables work the same way."],
-  shop:["Every great gamer has a fail compilation. Consider this yours.","Math problems are like horror games. They're only scary until you know what's coming.","Multiplication is just addition that's in a hurry."]};
+// Mrs. Calder's jokes. She opens about 60% of her explanations with one (Mike's request), then gets down to business.
+const JOKES_ANY=["Why was six afraid of seven? Because seven ate nine. I've told that joke to kindergartners and eighth graders, and only the kindergartners laughed.",
+ "Fun fact: I once had a student try to divide by zero. We don't talk about that day.",
+ "Why did the student wear glasses in math class? It helps with di-vision.",
+ "I've graded about a million math tests in my career. You're doing better than you think.",
+ "My old students say I can spot a missing step from across the room. It's true. I can.",
+ "What's a math teacher's favorite season? Sum-mer. I'll be here all week.",
+ "I've taught kindergarten through eighth grade. Kindergartners eat crayons. Eighth graders roll their eyes. You're right in the sweet spot.",
+ "My coffee mug says World's Okayest Teacher. My students gave it to me. I'm choosing to believe it was a compliment.",
+ "I've been teaching so long, I remember when calculators were the size of a lunchbox.",
+ "Why did the math book look so sad? It had too many problems. I relate.",
+ "I have one rule in my classroom. No math tears. Math sweat is allowed.",
+ "Fun fact: I can grade a paper, drink my coffee, and spot someone passing notes, all at the same time. It's a gift.",
+ "Parallel lines have so much in common. It's a shame they'll never meet.",
+ "Are you a ninety degree angle? Because you're looking right.",
+ "Why do plants hate math? It gives them square roots.",
+ "I once had a student who was terrified of negative numbers. He'd stop at nothing to avoid them.",
+ "I tell my jokes to every class. Some years they laugh. This year, I have high hopes.",
+ "Why is the obtuse triangle always upset? Because it's never right. Unlike you, most of the time.",
+ "I asked my husband to help me grade papers. He gave everyone an A and a sticker. He's not allowed to help anymore.",
+ "What did zero say to eight? Nice belt.",
+ "I've had the same red pen for eleven years. It has seen things.",
+ "Why did the two fours skip lunch? They already eight. Okay, that one's from my third grade years.",
+ "My students once hid my whistle. I still found them all by the sound of their giggling. Teachers have ears like owls.",
+ "Mistakes are proof you're trying. My first year of teaching, I wrote the date wrong on the board for a whole week."];
+const JOKES={potion:["I'd tell you a joke about fractions, but you'd only get part of it.","Maomao would tell you to test it twice. I agree with her.","Fractions are like pizza. I've never met a pizza problem I didn't like.",
+   "What did one half say to the other half? Let's get together sometime. We'd make a whole.",
+   "In thirty years of teaching, I've learned one thing about denominators. They never, ever want to be added.",
+   "I asked a class to split a pizza into eighths. One boy ate the whole thing and called it eight eighths. Technically correct.",
+   "Fractions are like cats. They're happiest when they're simplified and left alone.",
+   "Maomao can spot poison in one sip. I can spot an unsimplified fraction in one glance. Everyone has a talent."],
+  lab:["Why did the decimal point go to the lab? It wanted to find its place.","A decimal point in the wrong spot is like a rocket pointed at the ground. Technically it works. Just not how you hoped.","Estimating first is what real engineers do. Mark Rober checks his numbers before anything launches.",
+   "Decimal points are tiny, but they're the bossiest thing on the page. A bit like me.",
+   "My first car cost four thousand dollars. Or was it four hundred? This is why we place our decimals carefully.",
+   "I tried moving a decimal point without counting once. The class field trip budget has never recovered.",
+   "Mark Rober builds glitter bombs. I build pop quizzes. Both are surprising, and both are for your own good.",
+   "A scientist, a decimal point, and a squirrel walk into a lab. Only the squirrel knew where to go. Let's be smarter than the squirrel."],
+  stage:["Times tables are like song lyrics. Sing them enough, and they get stuck in your head forever.","Even Miku practices her songs over and over. Times tables work the same way.",
+   "Miku can hit notes I can't. But I can do my nines faster than she can. Probably.",
+   "I once sang the times tables at a school assembly. The principal still asks me, politely, not to.",
+   "Seven times eight is fifty-six. I've said it so many times, my dog knows it.",
+   "Times tables are the warm-up stretches of math. Skip them, and something pulls a muscle later.",
+   "Why are nines so good at concerts? They always land on the beat. Mostly. Let's check this one."],
+  shop:["Every great gamer has a fail compilation. Consider this yours.","Math problems are like horror games. They're only scary until you know what's coming.","Multiplication is just addition that's in a hurry.",
+   "LaurenZside screams at jump scares. I scream at missing units. We all have our thing.",
+   "Word problems are just stories where the ending is a number. Sometimes a very surprising number.",
+   "When a gamer loses a life, they just try again. Same rule in my classroom, but with fewer zombies.",
+   "I told my class we'd multiply Robux today. I've never seen so many hands go up so fast.",
+   "My grandson tried to teach me a horror game once. I screamed so loud the neighbors called. I'll stick to math."]};
 // Pick without repeating recent choices
 const recentPicks={};
 function fresh(pool,key){ const r=recentPicks[key]||(recentPicks[key]=[]); const keep=Math.max(1,Math.floor(pool.length*.6));
   let opts=pool.map((_,i)=>i).filter(i=>!r.includes(i)); if(!opts.length) opts=pool.map((_,i)=>i);
   const i=pick(opts); r.push(i); while(r.length>keep) r.shift(); return pool[i]; }
-function joke(){ if(Math.random()>.22) return ''; const w=G&&G.qWorld; return fresh([...(JOKES[w]||[]),...JOKES_ANY],'joke'); }
-function missScript(q){ const j=joke(); return [fresh(INTRO_MISS,'intro'), teacherScript(q), j, j? '' : fresh(OUTRO,'outro')].filter(Boolean).join(' '); }
-function secondScript(q){ return [fresh(INTRO_SECOND,'second'), teacherScript(q), fresh(OUTRO,'outro')].filter(Boolean).join(' '); }
+// Lead with a joke 60% of the time, then the explanation
+function joke(){ if(Math.random()>=.6) return ''; const w=(G&&G.qWorld)||'any'; return fresh([...(JOKES[w]||[]),...JOKES_ANY],'joke:'+w); }
+function missScript(q){ return [joke(), fresh(INTRO_MISS,'intro'), teacherScript(q), fresh(OUTRO,'outro')].filter(Boolean).join(' '); }
+function secondScript(q){ return [joke(), fresh(INTRO_SECOND,'second'), teacherScript(q), fresh(OUTRO,'outro')].filter(Boolean).join(' '); }
+function hearScript(q){ return [joke(), teacherScript(q)].filter(Boolean).join(' '); }
 function teacherScript(q){ if(q._script) return q._script; // same explanation if she taps Hear it again
   const ways=[q.say,...(q.alt||[])].filter(Boolean); if(!ways.length) return q._script=`Let's walk through it. ${q.explain}`;
   return q._script=fresh(ways,'way:'+q.tag); }
@@ -1195,7 +1249,7 @@ function answer(ok, el){
     sceneReact(true); mochiMood(true);
     if(first && ((G.combo===5||G.combo===10) || Math.random()<(G.world==='mix'?.12:.07))) { const c=G.combo; setTimeout(()=>squishyDrop(c===5||c===10? c : 0),650); }
     const cheers = G.combo>=5? ['UNSTOPPABLE! 🔥','Fever mode! ✨','Legendary combo!'] : first? ['Awesome!','Nailed it!','Brilliant!','Perfect!','Sugoi! ✨','You got it!'] : ['Got it on the second try!','Nice recovery!'];
-    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?`⚡ On the beat! Speed bonus +${money(10/S.settings.pointsPerDollar)}.`:'', G.combo>=3?`Combo ×${G.combo}! Bonus +${money(10/S.settings.pointsPerDollar)}.`:''].filter(Boolean).join(' ') : G.q.explain, first? {script:teacherScript(G.q)} : {auto:true, script:secondScript(G.q)});
+    showSheet(true, pick(cheers)+(pts>0?`  +${money(pts/S.settings.pointsPerDollar)} 🫙`:''), first? [fast?`⚡ On the beat! Speed bonus +${money(10/S.settings.pointsPerDollar)}.`:'', G.combo>=3?`Combo ×${G.combo}! Bonus +${money(10/S.settings.pointsPerDollar)}.`:''].filter(Boolean).join(' ') : G.q.explain, first? {script:hearScript(G.q)} : {auto:true, script:secondScript(G.q)});
   } else if(G.tries===1){
     G.combo=0; SFX.wrong(); sceneReact(false); mochiMood(false); renderProg();
     if(!(G.q.choices && G.q.choices.length<=2)) toast('Not quite! One more try 💪');
@@ -1472,13 +1526,13 @@ function playSkit(next, key){
 }
 let brkTimer=null, ytPlayer=null;
 function takeBreak(next){
-  const bt=S.settings.breakType||'skits';
-  if(bt==='skits' || (bt==='both' && Math.random()<.5)) { SFX.fanfare(); confetti(80); return playSkit(next); }
+  const bt=IS_ARTIFACT? 'skits' : (S.settings.breakType||'both'), share=(S.settings.videoShare??60)/100;
+  if(bt==='skits' || (bt==='both' && Math.random()>=share)) { SFX.fanfare(); confetti(80); return playSkit(next); }
   return takeVideoBreak(next); }
 function testSkit(k){ const saved=G; G={qWorld:'mix'}; playSkit(()=>{ G=saved; }, k); }
 function takeVideoBreak(next){
   SFX.fanfare(); confetti(100);
-  const w=G.qWorld, cap=(S.settings.maxVideoMin||0)*60, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
+  const w=G.qWorld, cap=S.settings.maxVideoSec??45, srcs=worldVideoLines(w).map(parseSrc).filter(Boolean);
   const src=srcs.length? pick(srcs) : null;
   openModal(`<button class="modal-x" id="mX" aria-label="Close video">✕</button><h2>📺 Break time!</h2><div class="note-s" style="text-align:center;margin-bottom:8px">Video from ${WORLD_LABEL[w]}</div>
     <div class="vidwrap ${src&&src.short?'short':''}"><div id="ytp"></div><div class="vidmsg" id="vmsg">Loading video…</div></div>
@@ -1606,11 +1660,11 @@ function renderParent(){
   $('pHist').innerHTML = S.payouts.length? S.payouts.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${p.points}</td><td>${money(p.dollars)}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">No payouts yet</td></tr>';
   $('pStats').innerHTML=['shop','potion','lab','stage'].map(k=>{ const w=S.worlds[k]; return `<tr><td>${GAMES[k].name}</td><td>${w.level}</td><td>${w.answered}</td><td>${w.answered?Math.round(w.firstTry/w.answered*100)+'%':'–'}</td></tr>`; }).join('');
   const t=today(); $('pDays').innerHTML=Array.from({length:7},(_,i)=>{ const d=dayOffset(t,-i), r=S.days[d]||{q:0,pts:0,goal:false}; return `<tr><td>${i===0?'Today':d}</td><td>${r.q}</td><td>${r.pts}</td><td>${r.goal?'✅':''}</td></tr>`; }).join('');
-  fillVoiceList(); $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoMin; $('sBreak').value=st.breakType||'skits'; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
+  fillVoiceList(); $('sVoice').value=st.voice?'1':'0'; $('sRate').value=st.pointsPerDollar; $('sGoal').value=st.dailyGoal; $('sCap').value=st.dailyCap; $('sLen').value=st.roundLen; $('sEvery').value=st.breakEvery; $('sMax').value=st.maxVideoSec??45; $('sBreak').value=st.breakType||'skits'; for(const w of ['shop','potion','lab','stage']) $('v-'+w).value=worldVideoLines(w).join('\n'); $('sPin').value='';
 }
 function saveSettings(){
   const st=S.settings, num=(id,min,max,def)=>{ const v=parseInt($(id).value,10); return isNaN(v)?def:Math.max(min,Math.min(max,v)); };
-  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,1000); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoMin=num('sMax',0,60,0); st.breakType=$('sBreak').value;
+  st.voice=$('sVoice').value==='1'; st.voiceName=$('sVoiceName').value; pickVoice(); st.pointsPerDollar=num('sRate',1,100000,1000); st.dailyGoal=num('sGoal',5,200,24); st.dailyCap=num('sCap',0,100000,0); st.roundLen=num('sLen',4,40,12); st.breakEvery=num('sEvery',2,20,4); st.maxVideoSec=num('sMax',0,600,45); st.breakType=$('sBreak').value;
   let bad=[];
   for(const w of ['shop','potion','lab','stage']){ const lines=$('v-'+w).value.split('\n').map(s=>s.trim()).filter(Boolean);
     bad=bad.concat(lines.filter(l=>!parseSrc(l))); const good=lines.filter(l=>parseSrc(l));
@@ -1657,7 +1711,5 @@ async function resetAll(){
 
 renderHome();
 </script>
-
-
-
-</body></html>
+</body>
+</html>
