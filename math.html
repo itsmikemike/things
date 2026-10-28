@@ -1,8 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#7c5cff">
 <title>Mochi Math Quest</title>
@@ -337,8 +333,8 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
 .modal-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:#f4f1ff;font-size:18px;font-weight:700;z-index:2}
 .modal-x:active{transform:scale(.9)}
 </style>
-</head>
-<body>
+
+
 <div id="bubbles"></div>
 <canvas id="confetti"></canvas>
 <div id="app">
@@ -360,7 +356,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     <div class="hero4">
       <button class="htile ht-shop" onclick="startGame('shop')"><span class="himg"></span><span class="hbody"><span class="htag" style="background:#7c3aed">Multiplication</span><h2>LaurenZside's Game Room</h2><span class="hlvl" id="lvl-shop">Level 1</span></span></button>
       <button class="htile ht-potion" onclick="startGame('potion')"><span class="himg"></span><span class="hbody"><span class="htag" style="background:#1f7a4d">Fractions</span><h2>Maomao's Apothecary</h2><span class="hlvl" id="lvl-potion">Level 1</span></span></button>
-      <button class="htile ht-lab" onclick="startGame('lab')"><span class="himg"></span><span class="hbody"><span class="htag" style="background:#e8336b">Geometry</span><h2>Mark Rober's Lab</h2><span class="hlvl" id="lvl-lab">Level 1</span></span></button>
+      <button class="htile ht-lab" onclick="startGame('lab')"><span class="himg"></span><span class="hbody"><span class="htag" style="background:#e8336b">Decimal ×</span><h2>Mark Rober's Lab</h2><span class="hlvl" id="lvl-lab">Level 1</span></span></button>
       <button class="htile ht-stage" onclick="startGame('stage')"><span class="himg"></span><span class="hbody"><span class="htag" style="background:#1f7a4d">Times tables</span><h2>Miku's Concert Stage</h2><span class="hlvl" id="lvl-stage">Level 1</span></span></button>
     </div>
     <div class="grid">
@@ -427,7 +423,7 @@ td,th{padding:7px 6px;border-bottom:1px solid #eee;text-align:left}
     <div class="panel">
       <h2>⚙️ Settings</h2>
       <div class="two">
-        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 1000, so each first-try correct answer (100 points) earns $0.10. Second-try correct answers earn half. Combos and fast answers add a few cents.</small></label>
+        <label class="field">Points per $1.00<input id="sRate" type="number" min="1" inputmode="numeric"><small>Default 1000, so each first-try correct answer (120 points) earns $0.12. Second-try correct answers earn half. Combos and fast answers add a few cents.</small></label>
         <label class="field">Daily goal (questions)<input id="sGoal" type="number" min="5" inputmode="numeric"><small>Meeting the goal keeps the streak and gives a bonus.</small></label>
         <label class="field">Teacher voice<select id="sVoiceName"></select><small>★ = extra-natural voice. <button type="button" class="linkbtn" style="padding:2px 0;font-size:13px" onclick="testVoice()">▶ Test voice</button></small></label>
         <label class="field">Read explanations aloud<select id="sVoice"><option value="1">Yes, automatically when she misses one</option><option value="0">Only when she taps 🔊 Hear it</option></select><small>Uses the iPad or computer's built-in voice. Works offline.</small></label>
@@ -704,6 +700,52 @@ function genShop(L){
   return {tag:'Best buy',q:`Lauren is buying ${it}s for a fan giveaway. Which deal is cheaper <b>per item</b>?`,ans,choices:shuffle([A,B]),explain:`${A} → ${money(e1)} each. ${B} → ${money(e2)} each. Better deal: <b>${ans}</b>.`};
 }
 
+/* ---------- Mark Rober's Lab: multiplying with decimals (where does the decimal point go?) ---------- */
+function genDecMul(L){
+  const types = L===1? ['p10','p10','fromWhole','d1w','d1w'] : L===2? ['d2w','place','place','x01','d1w2'] : ['dxd','dxd','area','place3','dxd'];
+  const t=pick(types);
+  const pw=n=>10**n, val=(A,p)=>fmtD(A/pw(p)), places=s=>(String(s).split('.')[1]||'').length;
+  // product of A/10^pa and B/10^pb, built from whole numbers so there are no rounding surprises
+  const prod=(A,pa,B,pb)=>({digits:A*B, pp:pa+pb, ans:val(A*B,pa+pb)});
+  const wrongPlaces=(digits,pp)=>[val(digits,pp+1),val(digits,pp-1),String(digits),val(digits,pp+2),val(digits,Math.max(0,pp-2))];
+  const dig=x=>String(x).replace('.','').replace(/^0+(?=\d)/,''), pl=x=>places(x)||'none';
+  const countSay=(a,b,P)=>`Here's the trick: ignore the decimal points at first and multiply like whole numbers. ${dig(a)} times ${dig(b)} is ${P.digits}. Now count the digits after the decimal point in both numbers. ${a} has ${pl(a)}, and ${b} has ${pl(b)}. That's ${P.pp} in all. So the answer needs ${P.pp} digit${P.pp>1?'s':''} after the decimal point. Start at the end of ${P.digits} and hop ${P.pp} place${P.pp>1?'s':''} to the left: ${P.ans}.`;
+  const estSay=(a,b,P)=>{ const ra=Math.max(+a<1? Math.round(+a*10)/10 : Math.round(+a),.1), rb=Math.max(+b<1? Math.round(+b*10)/10 : Math.round(+b),.1), est=fmtD(ra*rb);
+    return `Let's use estimation to place the decimal point, which is how scientists double-check. ${a} is about ${fmtD(ra)}, and ${b} is about ${fmtD(rb)}. ${fmtD(ra)} times ${fmtD(rb)} is about ${est}. The digits of the exact answer are ${P.digits}. Which way of placing the decimal point lands near ${est}? ${P.ans}. The others are way too big or way too small.`; };
+  const mk=(tag,q,a,b,P,extra={})=>({tag,q,ans:P.ans,choices:choices(P.ans,wrongPlaces(P.digits,P.pp),()=>val(P.digits+R(-3,3)*(P.pp?1:10),P.pp)),
+    say:extra.say||countSay(a,b,P), alt:extra.alt||[estSay(a,b,P)], explain:extra.explain||`${dig(a)} × ${dig(b)} = ${P.digits}. ${places(a)+places(b)} decimal place${P.pp>1?'s':''} in all → <b>${P.ans}</b>.`, unit:extra.unit});
+  const nz=x=>x%10!==0; // avoid answers whose last digit is 0 (keeps every choice a different-looking number)
+  if(t==='p10'){ const pa=pick([1,2]); let A; do{ A=R(pa===1?11:101, pa===1?99:999); }while(!nz(A)); const a=val(A,pa), k=pick([10,100,1000]), z=String(k).length-1;
+    const ans=fmtD(A*k/pw(pa)), ctx=pick([[`A packet of glitter for Mark's glitter bomb weighs <b>${a}</b> ounces. How much do <b>${k}</b> packets weigh?`,'oz'],[`Mark's backyard rocket burns <b>${a}</b> grams of fuel each second. How much fuel in <b>${k}</b> seconds?`,'g'],[`One domino in the domino robot's track is <b>${a}</b> cm thick. How thick is a stack of <b>${k}</b> dominoes?`,'cm']]);
+    const ch=choices(ans,[fmtD(A*k/pw(pa+1)),fmtD(A*k/pw(pa-1)),fmtD(A*k*10/pw(pa)),String(A*k),fmtD(+a+k)],()=>fmtD(A*k/pw(pa+R(-2,2))));
+    return {tag:'Multiplying by 10, 100, 1000',q:`${ctx[0]}<br><b>${a} × ${k}</b>`,ans,choices:ch,unit:ctx[1],
+      say:`Multiplying by ${k} makes every digit worth ${k} times more, so every digit slides ${z} place${z>1?'s':''} to the left. That's the same as the decimal point hopping ${z} place${z>1?'s':''} to the right. Count the zeros in ${k}: there ${z>1?'are':'is'} ${z}. So ${a} becomes ${ans}.`,
+      alt:[`Think about money. ${a} dollars times ${k} is like having ${k} copies of ${a} dollars. A quick check: ${a} is about ${Math.round(+a)||1}, and ${Math.round(+a)||1} times ${k} is ${(Math.round(+a)||1)*k}. Our answer, ${ans}, is close to that, so the decimal point is in the right spot.`],
+      explain:`× ${k} moves the decimal point ${z} place${z>1?'s':''} to the right: ${a} → <b>${ans}</b>.`}; }
+  if(t==='fromWhole'){ let A,B; do{ A=R(12,89); B=R(2,9); }while(!nz(A*B)); const a=val(A,1), P=prod(A,1,B,0);
+    return mk('Placing the decimal',`Mark knows <b>${A} × ${B} = ${A*B}</b>.<br>His lab robot asks: what is <b>${a} × ${B}</b>?`,a,B,P,
+      {say:`We already know ${A} times ${B} is ${A*B}. Now look at ${a}. It's ${A} shrunk down by ten, because it has one digit after the decimal point. If one factor is ten times smaller, the answer is ten times smaller too. So ${A*B} becomes ${P.ans}.`,
+       explain:`${a} is ${A} ÷ 10, so the answer is ${A*B} ÷ 10 = <b>${P.ans}</b>.`}); }
+  if(t==='d1w'||t==='d1w2'){ const big=t==='d1w2'; let A,B; do{ A=big? R(11,99) : R(2,9); B=big? R(3,9) : R(2,9); }while(!nz(A*B)); const a=val(A,1), P=prod(A,1,B,0);
+    const [q,u]=pick([[`A marble in Mark's marble run rolls <b>${a}</b> meters every second. How far does it roll in <b>${B}</b> seconds?`,'m'],[`Each squirrel in the obstacle course eats <b>${a}</b> ounces of peanuts. How much do <b>${B}</b> squirrels eat?`,'oz'],[`Mark's water balloon launcher stretches <b>${a}</b> cm with each crank. How far after <b>${B}</b> cranks?`,'cm']]);
+    return mk('Decimal × whole number',`${q}<br><b>${a} × ${B}</b>`,a,B,P,{unit:u,alt:[estSay(a,B,P),`Picture it as repeated adding. ${a} added ${B} times. In tenths, ${a} is ${A} tenths, and ${B} groups of ${A} tenths is ${A*B} tenths. ${A*B} tenths is ${P.ans}.`]}); }
+  if(t==='d2w'){ let A,B; do{ A=R(101,499); B=R(3,9); }while(!nz(A*B)||!nz(A)); const a=val(A,2), P=prod(A,2,B,0);
+    const [q,u]=pick([[`Each plank for the squirrel obstacle course is <b>${a}</b> meters long. Mark lines up <b>${B}</b> planks. How long is that?`,'m'],[`One bag of elephant toothpaste powder costs <b>$${a}</b>. Mark buys <b>${B}</b> bags. What's the cost in dollars?`,'$'],[`Each parachute cord on the egg-drop rig is <b>${a}</b> meters long. The rig uses <b>${B}</b> cords. How much cord is that?`,'m']]);
+    return mk('Decimal × whole number',`${q}<br><b>${a} × ${B}</b>`,a,B,P,{unit:u==='$'?undefined:u}); }
+  if(t==='place'||t==='place3'){ let A,pa,B,pb; do{ if(t==='place'){ A=R(11,99); pa=1; B=R(3,9); pb=0; } else { A=R(11,99); pa=1; B=R(2,9); pb=1; } }while(!nz(A*B)||!nz(A)); const a=val(A,pa), b=val(B,pb), P=prod(A,pa,B,pb);
+    return mk('Where does the decimal go?',`Mark's calculator lost its decimal point! For <b>${a} × ${b}</b> it shows <b>${P.digits}</b>. What's the real answer?`,a,b,P,{say:estSay(a,b,P),alt:[countSay(a,b,P)]}); }
+  if(t==='x01'){ const by=pick([1,2]); let A; do{ A=R(12,95); }while(!nz(A)); const f=by===1?'0.1':'0.01', P=prod(A,0,1,by);
+    return mk('Multiplying by 0.1 and 0.01',`Mark builds a model of a <b>${A}</b>-meter rocket at <b>${f}</b> of the real size. How long is the model?<br><b>${A} × ${f}</b>`,A,f,P,{unit:'m',
+      say:`Multiplying by ${f} is the same as ${by===1?'dividing by 10':'dividing by 100'}, because ${f} means one ${by===1?'tenth':'hundredth'}. So the decimal point hops ${by} place${by>1?'s':''} to the left. ${A} becomes ${P.ans}. Notice the answer got smaller. Multiplying by a number less than one always shrinks things.`,
+      alt:[countSay(A,f,P)], explain:`× ${f} is the same as ÷ ${by===1?10:100}: <b>${P.ans}</b>.`}); }
+  if(t==='area'){ let A,B; do{ A=R(11,39); B=R(2,9); }while(!nz(A*B)||!nz(A)); const a=val(A,1), b=val(B,1), P=prod(A,1,B,1);
+    return mk('Decimal × decimal',`The landing pad for Mark's egg-drop rig is a rectangle <b>${a}</b> m long and <b>${b}</b> m wide. What's its area?<br><b>${a} × ${b}</b>`,a,b,P,{unit:'sq m'}); }
+  // dxd
+  let A,pa,B,pb; do{ const s=pick([[1,1],[1,1],[2,1]]); pa=s[0]; pb=s[1]; A=pa===1? R(2,49) : R(11,99); B=R(2,9); }while(!nz(A*B)||!nz(A)); const a=val(A,pa), b=val(B,pb), P=prod(A,pa,B,pb);
+  return mk('Decimal × decimal',`Mark's lab robot needs an exact answer:<br><b>${a} × ${b}</b>`,a,b,P,{alt:[estSay(a,b,P),`Here's a way to see it with fractions. ${a} is ${A} over ${pw(pa)}, and ${b} is ${B} tenths. Multiply the tops: ${A} times ${B} is ${P.digits}. Multiply the bottoms: ${pw(pa)} times 10 is ${pw(P.pp)}. ${P.digits} over ${pw(P.pp)} is ${P.ans}.`]});
+}
+
+// Geometry (the Lab's old topic, Mike swapped it for decimal multiplication 2026-10-27). Still used half the time in Daily Mix.
 function genLab(L){
   const unitPhrase=(n,u)=>{
     if(/inch|feet|foot|yard/.test(u)) return pick([()=>`Mark needs <b>${n} ${u}</b> of tape to build the ${use(['squirrel obstacle course','egg-drop rig','glitter bomb package','domino robot'])}.`,
@@ -850,12 +892,12 @@ function vialsSVG(frs){ const cols=['#8a4dff','#14a383'];
 const GAMES={
   shop:{name:"LaurenZside's Game Room",gen:genMulWords,cls:'s-shop'},
   potion:{name:"Maomao's Apothecary",gen:genPotion,cls:'s-potion'},
-  lab:{name:"Mark Rober's Lab",gen:genLab,cls:'s-lab'},
+  lab:{name:"Mark Rober's Lab",gen:genDecMul,cls:'s-lab'},
   stage:{name:"Miku's Concert Stage",gen:genMulFacts,cls:'s-stage'},
   mix:{name:'Daily Mix',cls:'s-mix'}
 };
 // The Daily Mix still practices the older topics for these two worlds half the time
-const LEGACY_GEN={shop:genShop, stage:genStage};
+const LEGACY_GEN={shop:genShop, stage:genStage, lab:genLab};
 
 /* =========================================================
    Saved state
@@ -973,7 +1015,7 @@ const INTRO_SECOND=["There it is. Now let's make sure you know why it works.","Y
 const OUTRO=["Now you know how to do it.","Keep that trick handy. You'll see it again.","Try to remember the steps, not just the answer.","Alright. On to the next one.","Next time, I bet you'll get it on the first try.","That's the whole idea. Let's keep moving.","Tuck that rule away in your brain.","See? Not so scary when we take it one step at a time.","Let's see if you can do the next one on your own.","Remember, slow and careful beats fast and wrong.","That method works every single time.","Good. Let's keep going.","",""];
 const JOKES_ANY=["Why was six afraid of seven? Because seven ate nine. I've told that joke to kindergartners and eighth graders, and only the kindergartners laughed.","Fun fact: I once had a student try to divide by zero. We don't talk about that day.","Why did the student wear glasses in math class? It helps with di-vision.","I've graded about a million math tests in my career. You're doing better than you think.","My old students say I can spot a missing step from across the room. It's true. I can.","What's a math teacher's favorite season? Sum-mer. I'll be here all week."];
 const JOKES={potion:["I'd tell you a joke about fractions, but you'd only get part of it.","Maomao would tell you to test it twice. I agree with her.","Fractions are like pizza. I've never met a pizza problem I didn't like."],
-  lab:["Parallel lines have so much in common. It's a shame they'll never meet.","Mark Rober would call that a failed test launch. And failed launches are where the best data comes from.","Are you a ninety degree angle? Because you're looking right."],
+  lab:["Why did the decimal point go to the lab? It wanted to find its place.","A decimal point in the wrong spot is like a rocket pointed at the ground. Technically it works. Just not how you hoped.","Mark Rober would call that a failed test launch. And failed launches are where the best data comes from.","Estimating first is what real engineers do. Mark Rober checks his numbers before anything launches."],
   stage:["Times tables are like song lyrics. Sing them enough, and they get stuck in your head forever.","Even Miku practices her songs over and over. Times tables work the same way."],
   shop:["Every great gamer has a fail compilation. Consider this yours.","Math problems are like horror games. They're only scary until you know what's coming.","Multiplication is just addition that's in a hurry."]};
 // Pick without repeating recent choices
@@ -1144,7 +1186,7 @@ function answer(ok, el){
   if(ok){
     const first=G.tries===1;
     G.combo = first? G.combo+1 : 0; G.best=Math.max(G.best,G.combo);
-    let pts = first? 100 : 50; if(G.combo>=3) pts+=10;
+    let pts = first? 120 : 60; if(G.combo>=3) pts+=10; // 2026-10-26: 120 points = $0.12 per first-try correct answer
     const fast = first && G.q.speed && (Date.now()-G.qStart) < G.q.speed*1000; if(fast) pts+=10;
     pts = grant(pts);
     record(first);
@@ -1615,5 +1657,7 @@ async function resetAll(){
 
 renderHome();
 </script>
-</body>
-</html>
+
+
+
+</body></html>
